@@ -1,0 +1,79 @@
+.center-editor {
+  flex: 1;
+  height: 100%;
+  min-width: 0;
+  overflow-y: auto;
+  margin-left: 30px;
+  margin-right: 30px;
+  padding-top: 25px;
+  padding-left: 16px;
+  cursor: text;
+}
+
+.root__header {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 30px;
+  margin-left: 30px;
+}
+
+.page__header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+}
+
+.page__header-top {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+  margin-bottom: 25px;
+  margin-left: 8px;
+  gap: 20px;
+}
+
+.page__create-page-button {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  background-color: rgb(226, 226, 226);
+  padding: 8px 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.page__create-page-button:hover {
+  background-color: rgb(207, 207, 207);
+  transition: background-color 0.2s ease;
+}
+
+.page__back-button {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  background-color: rgb(226, 226, 226);
+  padding: 8px 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.page__back-button:hover {
+  background-color: rgb(207, 207, 207);
+  transition: background-color 0.2s ease;
+}
+
+.page__title-wrapper {
+  width: 100%;
+}
+
+.page__title-input {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 32px;
+  width: 100%;
+  margin-bottom: 14px;
+  padding: 8px;
+  border: none;
+  outline: none;
+  background-color: transparent;
+}

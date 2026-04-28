@@ -1,0 +1,44 @@
+.sortable-item {
+  display: flex;
+  align-items: center;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  margin: 8px 10px;
+  transition: transform 0.2s ease;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.sortable-item:hover .drag-handle-button {
+  opacity: 1;
+}
+
+.sortable-item.dragging .drag-handle-button {
+  opacity: 0;
+}
+
+.drag-zone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  margin-right: 14px;
+  flex-shrink: 0;
+  transition: opacity 0.2s ease;
+}
+
+.content-zone {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.sortable-item.page:hover:not(:has(.drag-zone:hover)) .content-zone {
+  background-color: rgb(235, 235, 235);
+}
+
+.sortable-item.block {
+  cursor: text;
+}

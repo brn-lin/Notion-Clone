@@ -1,0 +1,7 @@
+# environment variables (frontend + backend)
+.env
+
+client/.env
+client/.env.*
+
+server/.env
