@@ -18,9 +18,6 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 // ------------------
 
-// Parse JSON bodies
-app.use(express.json());
-
 // Enable CORS
 app.use(
   cors({
@@ -31,6 +28,9 @@ app.use(
     credentials: true,
   }),
 );
+
+// Parse JSON bodies
+app.use(express.json());
 
 // ------------------
 // Rate Limiting
