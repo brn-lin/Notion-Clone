@@ -1,6 +1,7 @@
 const express = require("express");
 require("dotenv").config(); // Load .env variables
 const rateLimit = require("express-rate-limit");
+const cors = require("cors");
 
 const pool = require("./db");
 
@@ -19,6 +20,17 @@ const PORT = process.env.PORT || 5000;
 
 // Parse JSON bodies
 app.use(express.json());
+
+// Enable CORS
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://notion-clone-lilac-two.vercel.app/",
+    ],
+    credentials: true,
+  }),
+);
 
 // ------------------
 // Rate Limiting
