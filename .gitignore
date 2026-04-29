@@ -1,4 +1,4 @@
-# environment variables (frontend + backend)
+# Environment variables (frontend + backend)
 .env
 
 client/.env
