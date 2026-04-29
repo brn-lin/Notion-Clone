@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import "./BlockItem.css";
+import api from "../../api/axios";
 
 const BlockItem = ({ item, onEnter, onBackspace, focusId }) => {
   const [text, setText] = useState(item.content?.text || "");
@@ -28,17 +29,11 @@ const BlockItem = ({ item, onEnter, onBackspace, focusId }) => {
     try {
       const workspaceId = item.workspace_id;
 
-      await axios.patch(
-        `http://localhost:5000/workspaces/${workspaceId}/items/${item.id}`,
-        {
-          content: {
-            text: text,
-          },
+      await api.patch(`/workspaces/${workspaceId}/items/${item.id}`, {
+        content: {
+          text: text,
         },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      });
     } catch (err) {
       console.error("Failed to update block:", err);
     }
