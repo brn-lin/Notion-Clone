@@ -5,3 +5,6 @@ client/.env
 client/.env.*
 
 server/.env
+
+# Copy of database
+full_dump.sql
