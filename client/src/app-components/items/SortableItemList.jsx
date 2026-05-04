@@ -10,6 +10,7 @@ const SortableItemList = ({
   items,
   onOpen,
   onDelete,
+  onChange,
   onEnter,
   onBackspace,
   focusId,
@@ -28,6 +29,7 @@ const SortableItemList = ({
           item={item}
           onOpen={() => onOpen(item.id)}
           onDelete={onDelete}
+          onChange={onChange}
           onEnter={onEnter}
           onBackspace={onBackspace}
           focusId={focusId}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import api from "../../api/axios";
 import { useWorkspace } from "../../context/WorkspaceContext";
 
@@ -23,6 +23,8 @@ const CenterEditor = () => {
   const [isDragging, setIsDragging] = useState(false);
 
   const { workspaceId, workspaceName } = useWorkspace();
+
+  const saveTimeouts = useRef({});
 
   const currentItem = itemsById[currentItemId];
 
@@ -225,6 +227,41 @@ const CenterEditor = () => {
     }
   };
 
+  // Auto-save block text
+  const saveBlock = async (itemId, text) => {
+    try {
+      await api.patch(`/workspaces/${workspaceId}/items/${itemId}`, {
+        content: { text },
+      });
+    } catch (err) {
+      console.error("Auto-save failed:", err);
+    }
+  };
+
+  //
+  const handleBlockChange = (itemId, text) => {
+    // Optimistic update
+    setItemsById((prev) => ({
+      ...prev,
+      [itemId]: {
+        ...prev[itemId],
+        content: {
+          ...prev[itemId]?.content,
+          text,
+        },
+      },
+    }));
+
+    // Debounce per block
+    if (saveTimeouts.current[itemId]) {
+      clearTimeout(saveTimeouts.current[itemId]);
+    }
+
+    saveTimeouts.current[itemId] = setTimeout(() => {
+      saveBlock(itemId, text);
+    }, 600);
+  };
+
   // Pressing 'Enter' on an empty block creates a new block
   const handleEnter = async (currentItem) => {
     try {
@@ -406,6 +443,7 @@ const CenterEditor = () => {
           items={currentChildren.map((id) => itemsById[id]).filter(Boolean)}
           onOpen={openItem}
           onDelete={handleDeletePage}
+          onChange={handleBlockChange}
           onEnter={handleEnter}
           onBackspace={handleDeleteBlock}
           focusId={focusId}

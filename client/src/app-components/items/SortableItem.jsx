@@ -11,6 +11,7 @@ const SortableItem = ({
   item,
   onOpen,
   onDelete,
+  onChange,
   onEnter,
   onBackspace,
   focusId,
@@ -70,6 +71,7 @@ const SortableItem = ({
       <div className="content-zone">
         <BlockItem
           item={item}
+          onChange={onChange}
           onEnter={onEnter}
           onBackspace={onBackspace}
           focusId={focusId}

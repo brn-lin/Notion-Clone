@@ -1,11 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import axios from "axios";
 import "./BlockItem.css";
-import api from "../../api/axios";
 
-const BlockItem = ({ item, onEnter, onBackspace, focusId }) => {
+const BlockItem = ({ item, onChange, onEnter, onBackspace, focusId }) => {
   const [text, setText] = useState(item.content?.text || "");
-  const token = localStorage.getItem("token");
 
   const inputRef = useRef(null);
 
@@ -21,22 +18,10 @@ const BlockItem = ({ item, onEnter, onBackspace, focusId }) => {
   }, [focusId, item.id]);
 
   const handleChange = (e) => {
-    setText(e.target.value);
-  };
+    const value = e.target.value;
+    setText(value);
 
-  // Saves block's text to DB whenever user clicks away from input field
-  const handleBlur = async () => {
-    try {
-      const workspaceId = item.workspace_id;
-
-      await api.patch(`/workspaces/${workspaceId}/items/${item.id}`, {
-        content: {
-          text: text,
-        },
-      });
-    } catch (err) {
-      console.error("Failed to update block:", err);
-    }
+    onChange(item.id, value);
   };
 
   const handleKeyDown = (e) => {
@@ -61,7 +46,6 @@ const BlockItem = ({ item, onEnter, onBackspace, focusId }) => {
       ref={inputRef}
       value={text}
       onChange={handleChange}
-      onBlur={handleBlur}
       onKeyDown={handleKeyDown}
     />
   );
