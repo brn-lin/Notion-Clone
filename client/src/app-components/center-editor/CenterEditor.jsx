@@ -25,7 +25,7 @@ const CenterEditor = () => {
 
   const { workspaceId, workspaceName } = useWorkspace();
 
-  if (!workspaceId) {
+  if (!workspaceId || !workspaceReady) {
     return <Loading />;
   }
 
