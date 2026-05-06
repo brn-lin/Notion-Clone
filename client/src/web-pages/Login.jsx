@@ -8,6 +8,9 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
+
   const { setWorkspaceId } = useWorkspace();
 
   const navigate = useNavigate();
@@ -21,6 +24,7 @@ function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setLoginLoading(true);
 
     try {
       const res = await api.post("/auth/login", {
@@ -51,10 +55,14 @@ function Login() {
     } catch (err) {
       console.error(err);
       alert(err.response?.data?.message || "Login failed");
+    } finally {
+      setLoginLoading(false);
     }
   };
 
   const handleDemoLogin = async () => {
+    setDemoLoading(true);
+
     try {
       // Wake up backend first
       await api.get("/ready");
@@ -78,6 +86,8 @@ function Login() {
     } catch (err) {
       console.error(err);
       alert("Demo login failed");
+    } finally {
+      setDemoLoading(false);
     }
   };
 
@@ -87,8 +97,9 @@ function Login() {
         className="login__demo-button"
         type="button"
         onClick={handleDemoLogin}
+        disabled={demoLoading}
       >
-        Try Demo
+        {demoLoading ? "Starting demo server..." : "Try Demo"}
       </button>
       <form className="login__form" onSubmit={handleLogin}>
         <label className="login__input-label">
@@ -99,6 +110,7 @@ function Login() {
             placeholder="Enter email address..."
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            disabled={loginLoading}
           />
         </label>
 
@@ -110,11 +122,12 @@ function Login() {
             placeholder="Enter password..."
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            disabled={loginLoading}
           />
         </label>
 
-        <button className="login__button" type="submit">
-          Log in
+        <button className="login__button" type="submit" disabled={loginLoading}>
+          {loginLoading ? "Logging in..." : "Log in"}
         </button>
       </form>
       <div className="login__signup-row">
