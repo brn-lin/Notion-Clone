@@ -24,6 +24,10 @@ const CenterEditor = () => {
 
   const { workspaceId, workspaceName } = useWorkspace();
 
+  if (!workspaceId) {
+    return <Loading />;
+  }
+
   const saveTimeouts = useRef({});
 
   const currentItem = itemsById[currentItemId];
