@@ -56,9 +56,7 @@ function Login() {
 
       setWorkspaceId(workspaceId);
 
-      setTimeout(() => {
-        navigate("/editor");
-      }, 100);
+      navigate("/editor");
     } catch (err) {
       console.error(err);
       alert("Demo login failed");
