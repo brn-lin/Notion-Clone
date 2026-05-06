@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import { useWorkspace } from "../context/WorkspaceContext";
 import "./Login.css";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const { setWorkspaceId } = useWorkspace();
 
   const navigate = useNavigate();
 
@@ -44,8 +47,18 @@ function Login() {
         password: "demo123",
       });
 
-      sessionStorage.setItem("token", res.data.token);
-      navigate("/editor");
+      const token = res.data.token;
+      sessionStorage.setItem("token", token);
+
+      const demoRes = await api.post("/demo/reset");
+
+      const workspaceId = demoRes.data.workspaceId;
+
+      setWorkspaceId(workspaceId);
+
+      setTimeout(() => {
+        navigate("/editor");
+      }, 100);
     } catch (err) {
       console.error(err);
       alert("Demo login failed");

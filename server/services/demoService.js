@@ -1,5 +1,9 @@
 const pool = require("../db");
 
+// ------------------
+// Reset Demo workspace
+// ------------------
+
 const resetDemoWorkspace = async (demoUserId) => {
   const client = await pool.connect();
 
@@ -94,6 +98,8 @@ const resetDemoWorkspace = async (demoUserId) => {
     );
 
     await client.query("COMMIT");
+
+    return workspaceId;
   } catch (err) {
     await client.query("ROLLBACK");
     throw err;

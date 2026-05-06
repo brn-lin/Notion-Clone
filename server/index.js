@@ -5,6 +5,7 @@ const cors = require("cors");
 
 const pool = require("./db");
 
+const demoRoutes = require("./routes/demoRoutes");
 const authRoutes = require("./routes/authRoutes");
 const workspaceRoutes = require("./routes/workspaceRoutes");
 const itemRoutes = require("./routes/itemRoutes");
@@ -53,6 +54,11 @@ app.use(globalLimiter);
 app.get("/", (req, res) => {
   res.send("Notion Clone API is running!");
 });
+
+// ------------------
+// Demo Routes
+// ------------------
+app.use("/demo", demoRoutes);
 
 // ------------------
 // Auth Routes
