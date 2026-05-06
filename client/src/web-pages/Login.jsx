@@ -42,6 +42,10 @@ function Login() {
 
   const handleDemoLogin = async () => {
     try {
+      // Wake up backend first
+      await api.get("/ready");
+
+      // Now login
       const res = await api.post("/auth/login", {
         email: "demo@example.com",
         password: "demo123",
