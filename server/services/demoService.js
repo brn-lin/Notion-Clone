@@ -99,6 +99,19 @@ const resetDemoWorkspace = async (demoUserId) => {
 
     await client.query("COMMIT");
 
+    const verifyResult = await client.query(
+      `
+      SELECT role
+      FROM workspace_members
+      WHERE workspace_id = $1 AND user_id = $2
+      `,
+      [workspaceId, demoUserId],
+    );
+
+    if (!verifyResult.rows.length) {
+      throw new Error("Demo workspace membership missing");
+    }
+
     return workspaceId;
   } catch (err) {
     await client.query("ROLLBACK");
