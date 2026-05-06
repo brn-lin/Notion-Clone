@@ -32,6 +32,20 @@ function Login() {
 
       sessionStorage.setItem("token", token);
 
+      // Clear old workspace in local storage
+      setWorkspaceId(null);
+
+      // Fetch user's workspace
+      const wsRes = await api.get("/workspaces");
+
+      const firstWorkspace = wsRes.data[0];
+
+      if (firstWorkspace) {
+        setWorkspaceId(firstWorkspace.id);
+      } else {
+        console.warn("No workspace found for user");
+      }
+
       // Redirect to center editor
       navigate("/editor");
     } catch (err) {

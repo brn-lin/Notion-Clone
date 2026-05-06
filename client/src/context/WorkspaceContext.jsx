@@ -18,6 +18,8 @@ export const WorkspaceProvider = ({ children }) => {
   useEffect(() => {
     if (workspaceId) {
       localStorage.setItem("workspaceId", workspaceId);
+    } else {
+      localStorage.removeItem("workspaceId");
     }
   }, [workspaceId]);
 
