@@ -21,13 +21,8 @@ const CenterEditor = () => {
   const [itemStack, setItemStack] = useState([]); // Stack to track hierarchy
   const [focusId, setFocusId] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [workspaceReady, setWorkspaceReady] = useState(false);
 
   const { workspaceId, workspaceName } = useWorkspace();
-
-  if (!workspaceId || !workspaceReady) {
-    return <Loading />;
-  }
 
   const saveTimeouts = useRef({});
 
@@ -50,23 +45,10 @@ const CenterEditor = () => {
     setChildrenByParentId({});
   }, [workspaceId]);
 
-  useEffect(() => {
-    if (!workspaceId) return;
-
-    setWorkspaceReady(false);
-
-    const timer = setTimeout(() => {
-      setWorkspaceReady(true);
-    }, 200);
-
-    return () => clearTimeout(timer);
-  }, [workspaceId]);
-
   // Fetch root pages
   useEffect(() => {
-    if (!workspaceReady) return;
-
     const token = sessionStorage.getItem("token");
+
     if (!token || !workspaceId) return;
 
     api
@@ -90,7 +72,7 @@ const CenterEditor = () => {
           sessionStorage.removeItem("token");
         }
       });
-  }, [workspaceReady, workspaceId]);
+  }, [workspaceId]);
 
   // Create a page
   const handleCreatePage = async (parentId = null) => {
