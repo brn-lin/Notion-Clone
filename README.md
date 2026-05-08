@@ -8,8 +8,14 @@ A full-stack Notion insipred workspace application with nested pages, block-base
 
 ## Screenshots
 
+### Login Page
+
 ![Login Page](images/Notion%20Clone%20Demo%20Screenshot%201.png)
 
+### Signup Page
+
 ![Signup Page](images/Notion%20Clone%20Demo%20Screenshot%202.png)
+
+### Demo account
 
 ![Demo account](images/Notion%20Clone%20Demo%20Screenshot%203.png)
