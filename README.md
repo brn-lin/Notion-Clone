@@ -1,6 +1,6 @@
 # Notion Clone
 
-A full-stack Notion insipred workspace application with nested pages, block-based editing, drag-and-drop reordering, autosave, JWT authentication, and multi-workspace support.
+A full-stack Notion inspired workspace application featuring nested pages, block-based editing, drag-and-drop reordering, autosave, JWT authentication, and multi-workspace support.
 
 ## Live Demo
 
@@ -10,12 +10,12 @@ A full-stack Notion insipred workspace application with nested pages, block-base
 
 ### Login Page
 
-![Login Page](images/Notion%20Clone%20Demo%20Screenshot%201.png)
+![Login Page](images/Notion-Clone-Login-Page.png)
 
 ### Signup Page
 
-![Signup Page](images/Notion%20Clone%20Demo%20Screenshot%202.png)
+![Signup Page](images/Notion-Clone-Signup-Page.png)
 
-### Demo account
+### Demo Account
 
-![Demo account](images/Notion%20Clone%20Demo%20Screenshot%203.png)
+![Demo account](images/Notion-Clone-Demo-Account.png)
