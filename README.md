@@ -1,6 +1,6 @@
 # Notion Clone
 
-A full-stack Notion inspired workspace application featuring nested pages, block-based editing, drag-and-drop reordering, autosave, JWT authentication, and multi-workspace support.
+A full-stack Notion inspired workspace application featuring nested pages, block-based editing, drag-and-drop reordering, debounced autosave, JWT authentication, and multi-workspace support.
 
 ## Live Demo
 
@@ -30,11 +30,15 @@ A full-stack Notion inspired workspace application featuring nested pages, block
 - Multi-workspace support with workspace switching
 - Nested page hierarchy similar to Notion
 - Block-based editor with inline text editing
-- Drag-and-drop page and block reordering using dnd-kit
+- Drag-and-drop page and block reordering using dnd-kit and fractional indexing
 - Debounced autosave for block content editing
 - Dynamic page navigation with parent/child traversal
 - Optimistic UI updates for smoother interactions
-- Persistent workspace state using localStorage
 - Demo account with automatic backend reset functionality
 - RESTful API architecture with Express and PostgreSQL
-- Responsive editor layout with reusable React components
+
+## Tech Stack
+
+## Installation
+
+## API Endpoints
