@@ -37,24 +37,36 @@ A full-stack Notion inspired workspace application featuring nested pages, block
 - Dynamic page navigation with parent/child traversal
 - Optimistic UI updates for smoother interactions
 - Demo account with automatic backend reset functionality
-- RESTful API architecture with Express and PostgreSQL
 
 ## Tech Stack
 
 ### Frontend
 
 - React
+- Vite
+- React Router
 - dnd-kit
 
 ### Backend
 
 - Node.js
 - Express
+- JWT (authentication)
+- bcrypt (password hashing)
+- node-postgres (pg)
+- node-cron
 
 ### Database
 
 - PostgreSQL
 
 ## Installation
+
+### 1. Clone the repository
+
+```bash
+git clone <your-repo-url>
+cd notion-clone
+```
 
 ## API Endpoints
