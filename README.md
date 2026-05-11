@@ -1,10 +1,10 @@
 # Notion Clone
 
-A full-stack Notion inspired workspace application featuring nested pages, block-based editing, drag-and-drop reordering, debounced autosave, JWT authentication, and multi-workspace support.
+A full-stack Notion-inspired workspace application featuring nested pages, block-based editing, drag-and-drop reordering, debounced autosave, JWT authentication, and multi-workspace support.
 
 ## Live Demo
 
-[Click here for a Demo (opens in same tab)](https://notion-clone-lilac-two.vercel.app/)
+[Click here for a Demo](https://notion-clone-lilac-two.vercel.app/)
 
 ## Screenshots
 
