@@ -29,6 +29,8 @@ A full-stack Notion inspired workspace application featuring nested pages, block
 - JWT authentication with protected frontend routes
 - Multi-workspace support with workspace switching
 - Nested page hierarchy similar to Notion
+- Recursive soft delete and restore system for nested content
+- Circular nesting prevention for hierarchical page integrity
 - Block-based editor with inline text editing
 - Drag-and-drop page and block reordering using dnd-kit and fractional indexing
 - Debounced autosave for block content editing
@@ -38,6 +40,20 @@ A full-stack Notion inspired workspace application featuring nested pages, block
 - RESTful API architecture with Express and PostgreSQL
 
 ## Tech Stack
+
+### Frontend
+
+- React
+- dnd-kit
+
+### Backend
+
+- Node.js
+- Express
+
+### Database
+
+- PostgreSQL
 
 ## Installation
 
