@@ -65,8 +65,65 @@ A full-stack Notion inspired workspace application featuring nested pages, block
 ### 1. Clone the repository
 
 ```bash
-git clone <your-repo-url>
-cd notion-clone
+git clone https://github.com/brn-lin/Notion-Clone.git
+cd Notion-Clone
 ```
 
-## API Endpoints
+### 2. Install dependencies
+
+#### Backend
+
+```bash
+cd server
+npm install
+```
+
+#### Frontend
+
+```bash
+cd client
+npm install
+```
+
+### 3. Set up environment variables
+
+Create a `.env` file in the `server` directory based on the example:
+
+```bash
+cd server
+cp .env.example .env
+```
+
+Then fill in the required values:
+
+```env
+PORT=5000
+JWT_SECRET=your_secret_key
+DATABASE_URL=your_postgres_connection_string
+```
+
+### 4. Start the server
+
+#### Backend
+
+```bash
+cd server
+npm run dev
+```
+
+#### Frontend
+
+```bash
+cd client
+npm run dev
+```
+
+### 5. Open the application
+
+#### Backend
+
+http://localhost:5000
+
+#### Frontend
+
+http://localhost:5173
