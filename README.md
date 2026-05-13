@@ -6,6 +6,8 @@ A full-stack Notion-inspired workspace application featuring nested pages, block
 
 [Click here for a Demo](https://notion-clone-lilac-two.vercel.app)
 
+**Note:** The backend is hosted on Render’s free tier, which may introduce a brief initial load time due to cold starts. Subsequent requests respond normally.
+
 ## Screenshots
 
 ### Login Page
