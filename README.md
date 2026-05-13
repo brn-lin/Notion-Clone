@@ -4,7 +4,7 @@ A full-stack Notion-inspired workspace application featuring nested pages, block
 
 ## Live Demo
 
-[Click here for a Demo](https://notion-clone-lilac-two.vercel.app/)
+[Click here for a Demo](https://notion-clone-lilac-two.vercel.app)
 
 ## Screenshots
 
