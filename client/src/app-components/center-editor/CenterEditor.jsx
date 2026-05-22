@@ -236,7 +236,7 @@ const CenterEditor = () => {
       } catch (err) {
         console.error(err);
       }
-    }, 400);
+    }, 600);
   };
 
   // Auto-save block text
