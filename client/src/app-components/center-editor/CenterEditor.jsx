@@ -214,18 +214,29 @@ const CenterEditor = () => {
 
     if (!item || item.type !== "page") return;
 
-    try {
-      await api.patch(`/workspaces/${workspaceId}/items/${itemId}`, {
+    // Update page title immediately (prevents caret jump)
+    setItemsById((prev) => ({
+      ...prev,
+      [itemId]: {
+        ...prev[itemId],
         title: newTitle,
-      });
+      },
+    }));
 
-      setItemsById((prev) => ({
-        ...prev,
-        [itemId]: { ...prev[itemId], title: newTitle },
-      }));
-    } catch (err) {
-      console.error(err);
+    // Debounce API call
+    if (saveTimeouts.current[itemId]) {
+      clearTimeout(saveTimeouts.current[itemId]);
     }
+
+    saveTimeouts.current[itemId] = setTimeout(async () => {
+      try {
+        await api.patch(`/workspaces/${workspaceId}/items/${itemId}`, {
+          title: newTitle,
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }, 400);
   };
 
   // Auto-save block text
