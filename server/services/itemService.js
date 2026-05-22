@@ -574,7 +574,7 @@ const moveItemService = async ({
 // Soft delete an item
 // ------------------
 
-const softDeleteItemService = async ({ workspaceId, itemId }) => {
+const softDeleteItemService = async ({ workspaceId, itemId, userId }) => {
   const client = await pool.connect();
 
   try {
@@ -615,13 +615,17 @@ const softDeleteItemService = async ({ workspaceId, itemId }) => {
       )
 
       UPDATE items
-      SET deleted_at = NOW()
+      SET deleted_at = NOW(),
+          trashed_by_id = CASE
+            WHEN id = $1 THEN $3::uuid
+            ELSE NULL
+          END
       WHERE id IN (SELECT id FROM item_tree)
         AND workspace_id = $2
         AND deleted_at IS NULL
       RETURNING id
       `,
-      [itemId, workspaceId],
+      [itemId, workspaceId, userId],
     );
 
     await client.query("COMMIT");
@@ -636,6 +640,32 @@ const softDeleteItemService = async ({ workspaceId, itemId }) => {
   } finally {
     client.release();
   }
+};
+
+// ------------------
+// Get trash items (pages only)
+// ------------------
+
+const getTrashItemsService = async ({ workspaceId, userId }) => {
+  const result = await pool.query(
+    `
+    SELECT id,
+          parent_id,
+          title,
+          deleted_at,
+          created_at,
+          trashed_by_id
+    FROM items
+    WHERE workspace_id = $1
+      AND type = 'page'
+      AND deleted_at IS NOT NULL
+      AND trashed_by_id = $2
+    ORDER BY deleted_at DESC
+    `,
+    [workspaceId, userId],
+  );
+
+  return result.rows;
 };
 
 // ------------------
@@ -788,5 +818,6 @@ module.exports = {
   updateItemService,
   moveItemService,
   softDeleteItemService,
+  getTrashItemsService,
   restoreItemService,
 };

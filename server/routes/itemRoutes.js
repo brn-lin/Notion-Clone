@@ -73,6 +73,17 @@ router.delete(
 );
 
 // ------------------
+// Get trash items (pages only)
+// ------------------
+
+router.get(
+  "/:workspaceId/items/trash",
+  authMiddleware,
+  workspaceAuth("member"),
+  itemController.getTrashItemsController,
+);
+
+// ------------------
 // Restore a soft deleted item and all descendants (Within 30 day window)
 // ------------------
 

@@ -193,11 +193,13 @@ const moveItemController = async (req, res) => {
 const softDeleteItemController = async (req, res) => {
   const workspaceId = req.workspace.id;
   const { itemId } = req.params;
+  const userId = req.user.id;
 
   try {
     const result = await itemService.softDeleteItemService({
       workspaceId,
       itemId,
+      userId,
     });
 
     return res.status(200).json({
@@ -214,6 +216,30 @@ const softDeleteItemController = async (req, res) => {
 
     return res.status(500).json({
       error: "Failed to soft delete item",
+    });
+  }
+};
+
+// ------------------
+// Get trash items (pages only)
+// ------------------
+
+const getTrashItemsController = async (req, res) => {
+  const workspaceId = req.workspace.id;
+  const userId = req.user.id;
+
+  try {
+    const items = await itemService.getTrashItemsService({
+      workspaceId,
+      userId,
+    });
+
+    return res.status(200).json(items);
+  } catch (err) {
+    console.error("Error fetching trash items:", err);
+
+    return res.status(500).json({
+      error: "Failed to fetch trash items",
     });
   }
 };
@@ -265,5 +291,6 @@ module.exports = {
   updateItemController,
   moveItemController,
   softDeleteItemController,
+  getTrashItemsController,
   restoreItemController,
 };
