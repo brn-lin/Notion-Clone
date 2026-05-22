@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
+import { Outlet } from "react-router-dom";
 import Sidebar from "../sidebar/Sidebar";
-import CenterEditor from "../center-editor/CenterEditor";
 import { useWorkspace } from "../../context/WorkspaceContext";
 import Loading from "../../Loading";
-import "./EditorLayout.css";
+import "./AppLayout.css";
 
-const EditorLayout = () => {
+const AppLayout = () => {
   const [workspaceReady, setWorkspaceReady] = useState(false);
 
   const { workspaceId } = useWorkspace();
@@ -27,11 +27,11 @@ const EditorLayout = () => {
   }
 
   return (
-    <div className="editor-layout">
+    <div className="app-layout">
       <Sidebar />
-      <CenterEditor />
+      <Outlet />
     </div>
   );
 };
 
-export default EditorLayout;
+export default AppLayout;
