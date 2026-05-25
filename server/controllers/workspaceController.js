@@ -32,7 +32,6 @@ const createWorkspaceController = async (req, res) => {
 // ------------------
 
 const renameWorkspaceController = async (req, res) => {
-  const { workspaceId } = req.params;
   const name = String(req.body.name || "").trim();
 
   // Validate input
@@ -42,7 +41,7 @@ const renameWorkspaceController = async (req, res) => {
 
   try {
     const workspace = await workspaceService.renameWorkspaceService(
-      workspaceId,
+      req.workspaceId,
       name,
     );
 
@@ -80,8 +79,26 @@ const getAllWorkspacesController = async (req, res) => {
 // ------------------
 
 const getWorkspaceController = async (req, res) => {
-  // Successful response
-  res.json(req.workspace);
+  try {
+    const workspace = await workspaceService.getWorkspaceService(
+      req.workspaceId,
+    );
+
+    if (!workspace) {
+      return res.status(404).json({
+        error: "Workspace not found",
+      });
+    }
+
+    // Successful response
+    return res.status(200).json(workspace);
+  } catch (err) {
+    console.error("Get workspace error:", err);
+
+    return res.status(500).json({
+      error: "Failed to get workspace",
+    });
+  }
 };
 
 // ------------------
@@ -91,7 +108,7 @@ const getWorkspaceController = async (req, res) => {
 const softDeleteWorkspaceController = async (req, res) => {
   try {
     const result = await workspaceService.softDeleteWorkspaceService(
-      req.workspace.id,
+      req.workspaceId,
     );
 
     // Successful response
@@ -118,7 +135,7 @@ const softDeleteWorkspaceController = async (req, res) => {
 const restoreWorkspaceController = async (req, res) => {
   try {
     const result = await workspaceService.restoreWorkspaceService(
-      req.workspace.id,
+      req.workspaceId,
     );
 
     return res.status(200).json({
@@ -166,7 +183,7 @@ const addMemberController = async (req, res) => {
 
   try {
     const members = await workspaceService.addMemberService(
-      req.workspace.id,
+      req.workspaceId,
       userId,
       roleNormalized,
     );
@@ -204,7 +221,7 @@ const updateMemberRoleController = async (req, res) => {
 
   try {
     const member = await workspaceService.updateMemberRoleService(
-      req.workspace.id,
+      req.workspaceId,
       targetUserId,
       roleNormalized,
     );
@@ -214,7 +231,7 @@ const updateMemberRoleController = async (req, res) => {
     }
 
     // Successful response
-    res.json(await workspaceService.getWorkspaceById(req.workspace.id));
+    res.json(member);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to update member role" });
@@ -235,7 +252,7 @@ const removeMemberController = async (req, res) => {
 
   try {
     const removed = await workspaceService.removeMemberService(
-      req.workspace.id,
+      req.workspaceId,
       targetUserId,
     );
 
