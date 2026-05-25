@@ -36,7 +36,7 @@ const workspaceAuth = (requiredRole = "viewer") => {
       }
 
       // Saves workspace and member role in a request
-      req.workspace = { id };
+      req.workspaceId = id;
       req.memberRole = role;
 
       next();
