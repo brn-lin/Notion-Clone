@@ -132,24 +132,24 @@ const softDeleteWorkspaceService = async (workspaceId) => {
     // Soft delete all pages in the workspace recursively
     await client.query(
       `
-      WITH RECURSIVE page_tree AS (
-        SELECT id from pages
+      WITH RECURSIVE item_tree AS (
+        SELECT id from items
         WHERE workspace_id = $1
           AND parent_id IS NULL
           AND deleted_at IS NULL
         
         UNION ALL
 
-        SELECT p.id
-        FROM pages p
-        INNER JOIN page_tree pt
-          ON p.parent_id = pt.id
-        WHERE p.workspace_id = $1
+        SELECT i.id
+        FROM items i
+        INNER JOIN item_tree it
+          ON i.parent_id = it.id
+        WHERE i.workspace_id = $1
       )
 
-      UPDATE pages
+      UPDATE items
       SET deleted_at = NOW()
-      WHERE id IN (SELECT id FROM page_tree)
+      WHERE id IN (SELECT id FROM item_tree)
         AND deleted_at IS NULL
       `,
       [workspaceId],
@@ -223,24 +223,24 @@ const restoreWorkspaceService = async (workspaceId) => {
     // Restore only pages that were deleted with the workspace
     await client.query(
       `
-      WITH RECURSIVE page_tree AS (
+      WITH RECURSIVE item_tree AS (
         SELECT id
-        FROM pages
+        FROM items
         WHERE workspace_id = $1
           AND parent_id IS NULL
         
         UNION ALL
 
-        SELECT p.id
-        FROM pages p
-        INNER JOIN page_tree pt
-          ON p.parent_id = pt.id
-        WHERE p.workspace_id = $1
+        SELECT i.id
+        FROM items i
+        INNER JOIN item_tree it
+          ON i.parent_id = it.id
+        WHERE i.workspace_id = $1
       )
 
-      UPDATE pages
+      UPDATE items
       SET deleted_at = NULL
-      WHERE id IN (SELECT id FROM page_tree)
+      WHERE id IN (SELECT id FROM item_tree)
         AND deleted_at IS NOT NULL
         AND deleted_at >= $2
       `,
