@@ -5,7 +5,7 @@ const itemService = require("../services/itemService");
 // ------------------
 
 const createItemController = async (req, res) => {
-  const workspaceId = req.workspace.id;
+  const workspaceId = req.workspaceId;
   const userId = req.user.id;
 
   const {
@@ -60,7 +60,7 @@ const createItemController = async (req, res) => {
 // ------------------
 
 const getItemsInWorkspaceController = async (req, res) => {
-  const workspaceId = req.workspace.id;
+  const workspaceId = req.workspaceId;
 
   try {
     const items = await itemService.getItemsInWorkspaceService({
@@ -80,7 +80,7 @@ const getItemsInWorkspaceController = async (req, res) => {
 // ------------------
 
 const getItemInParentController = async (req, res) => {
-  const workspaceId = req.workspace.id;
+  const workspaceId = req.workspaceId;
   const { parentId } = req.params;
 
   try {
@@ -106,7 +106,7 @@ const getItemInParentController = async (req, res) => {
 // ------------------
 
 const updateItemController = async (req, res) => {
-  const workspaceId = req.workspace.id;
+  const workspaceId = req.workspaceId;
   const { itemId } = req.params;
   const { title, content } = req.body;
 
@@ -151,7 +151,7 @@ const updateItemController = async (req, res) => {
 // ------------------
 
 const moveItemController = async (req, res) => {
-  const workspaceId = req.workspace.id;
+  const workspaceId = req.workspaceId;
   const { itemId } = req.params;
   const { newParentId = null, newIndex } = req.body;
 
@@ -191,7 +191,7 @@ const moveItemController = async (req, res) => {
 // ------------------
 
 const softDeleteItemController = async (req, res) => {
-  const workspaceId = req.workspace.id;
+  const workspaceId = req.workspaceId;
   const { itemId } = req.params;
   const userId = req.user.id;
 
@@ -225,7 +225,7 @@ const softDeleteItemController = async (req, res) => {
 // ------------------
 
 const getTrashItemsController = async (req, res) => {
-  const workspaceId = req.workspace.id;
+  const workspaceId = req.workspaceId;
   const userId = req.user.id;
 
   try {
@@ -249,7 +249,7 @@ const getTrashItemsController = async (req, res) => {
 // ------------------
 
 const restoreItemController = async (req, res) => {
-  const workspaceId = req.workspace.id;
+  const workspaceId = req.workspaceId;
   const { itemId } = req.params;
 
   try {
