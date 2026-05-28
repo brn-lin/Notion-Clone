@@ -4,6 +4,7 @@ import { useWorkspace } from "../../context/WorkspaceContext";
 import api from "../../api/axios";
 import { MdOutlineDriveFileRenameOutline } from "react-icons/md";
 import "./Sidebar.css";
+import { RiDeleteBinLine } from "react-icons/ri";
 
 const Sidebar = () => {
   const navigate = useNavigate();
@@ -141,11 +142,11 @@ const Sidebar = () => {
 
   return (
     <div className="sidebar">
-      <div className="sidebar__header">
+      <div className="sidebar-header">
         {workspaces.map((ws) => (
           <div
             key={ws.id}
-            className={"sidebar__workspace-button"}
+            className={"sidebar-header__workspace-button"}
             onClick={() => openWorkspace(ws.id)}
             role="button"
             tabIndex={0}
@@ -155,7 +156,7 @@ const Sidebar = () => {
           >
             {editingWorkspaceId === ws.id ? (
               <input
-                className="sidebar___workspace-input"
+                className="sidebar-header___workspace-input"
                 value={editingName}
                 autoFocus
                 onClick={(e) => e.stopPropagation()}
@@ -170,11 +171,11 @@ const Sidebar = () => {
               />
             ) : (
               <>
-                <div className="sidebar__workspace-left">
+                <div className="sidebar-header__workspace-left">
                   {/* Rename button on left */}
                   {workspaceId === ws.id && (
                     <button
-                      className="sidebar__rename-workspace-button"
+                      className="sidebar-header__rename-workspace-button"
                       onClick={(e) => {
                         e.stopPropagation();
                         setEditingWorkspaceId(ws.id);
@@ -189,30 +190,41 @@ const Sidebar = () => {
 
                 {/* Active checkmark */}
                 {workspaceId === ws.id && (
-                  <span className="sidebar__active-workspace">✓</span>
+                  <span className="sidebar-header__active-workspace">✓</span>
                 )}
               </>
             )}
           </div>
         ))}
         <button
-          className="sidebar__create-new-workspace-button"
+          className="sidebar-header__create-new-workspace-button"
           onClick={handleCreateWorkspace}
         >
           + New workspace
         </button>
       </div>
 
-      <div className="sidebar__footer">
+      <div className="sidebar-middle"></div>
+
+      <div className="sidebar-footer">
         {workspaceId && (
           <button
-            className="sidebar__delete-workspace-button"
+            className="sidebar-footer__delete-workspace-button"
             onClick={handleDeleteWorkspace}
           >
             Delete workspace
           </button>
         )}
-        <button className="sidebar__logout-button" onClick={handleLogout}>
+
+        <button className="sidebar-footer__trash-button">
+          <RiDeleteBinLine />
+          <span>Trash</span>
+        </button>
+
+        <button
+          className="sidebar-footer__logout-button"
+          onClick={handleLogout}
+        >
           Log out
         </button>
       </div>
