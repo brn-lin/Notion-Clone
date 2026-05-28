@@ -7,7 +7,7 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 
 import AppLayout from "./app-components/app-layout/AppLayout";
 import CenterEditor from "./app-components/center-editor/CenterEditor";
-import TrashBin from "./app-components/trash/TrashBin";
+import TrashBin from "./app-components/trash/Trash";
 
 function App() {
   return (
