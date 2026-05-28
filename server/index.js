@@ -34,20 +34,6 @@ app.use(
 app.use(express.json());
 
 // ------------------
-// Rate Limiting
-// ------------------
-
-// Global limiter (protects everything)
-const globalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 200,
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-app.use(globalLimiter);
-
-// ------------------
 // Test route
 // ------------------
 
