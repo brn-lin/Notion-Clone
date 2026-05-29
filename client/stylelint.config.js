@@ -27,6 +27,18 @@ export default {
         },
 
         {
+          groupName: "Typography",
+          properties: [
+            "font-family",
+            "font-size",
+            "font-weight",
+            "line-height",
+            "text-align",
+            "color",
+          ],
+        },
+
+        {
           groupName: "Spacing",
           properties: [
             "margin",
@@ -39,18 +51,6 @@ export default {
             "padding-bottom",
             "padding-left",
             "padding-right",
-          ],
-        },
-
-        {
-          groupName: "Typography",
-          properties: [
-            "font-family",
-            "font-size",
-            "font-weight",
-            "line-height",
-            "text-align",
-            "color",
           ],
         },
 
