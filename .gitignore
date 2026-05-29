@@ -1,3 +1,10 @@
+# Dependencies
+node_modules/
+node_modules/.vite/
+
+# Build output
+dist/
+
 # Environment variables (frontend + backend)
 .env
 
@@ -5,6 +12,9 @@ client/.env
 client/.env.*
 
 server/.env
+
+# VS Code
+.vscode/
 
 # Copy of database
 full_dump.sql
