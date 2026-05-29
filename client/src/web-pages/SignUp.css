@@ -10,30 +10,30 @@
 .signup__form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
   width: 360px;
+  gap: 20px;
 }
 
 .signup__input-label {
   display: flex;
   flex-direction: column;
+  gap: 8px;
   font-size: 12px;
   font-weight: 600;
-  color: rgb(125, 122, 117);
-  gap: 8px;
+  color: rgb(125 122 117);
 }
 
 .signup__input-field {
   font-size: 14px;
-  padding: 10px;
-  border: 1px solid rgb(214, 214, 214);
+  border: 1px solid rgb(214 214 214);
   border-radius: 8px;
+  padding: 10px;
 }
 
 .signup__button {
   font-size: 14px;
   color: white;
-  background-color: rgb(58, 132, 228);
+  background-color: rgb(58 132 228);
   border: none;
   border-radius: 8px;
   margin-top: 10px;
@@ -49,7 +49,7 @@
 }
 
 .signup__login-text {
-  color: rgb(102, 102, 102);
+  color: rgb(102 102 102);
   margin-right: 6px;
 }
 
@@ -60,17 +60,17 @@
 }
 
 .signup__login-link {
-  color: rgb(102, 102, 102);
+  color: rgb(102 102 102);
   background-color: transparent;
   border: none;
+  padding: 0;
   text-decoration: underline;
   text-underline-offset: 2px;
-  text-decoration-color: rgb(102, 102, 102);
-  padding: 0;
+  text-decoration-color: rgb(102 102 102);
   cursor: pointer;
 }
 
 .signup__login-link:hover {
-  color: rgb(76, 179, 226);
-  text-decoration-color: rgb(76, 179, 226);
+  color: rgb(76 179 226);
+  text-decoration-color: rgb(76 179 226);
 }

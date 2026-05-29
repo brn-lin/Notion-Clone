@@ -1,33 +1,33 @@
 .sidebar {
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;
   justify-content: space-between;
-  background-color: rgb(245, 245, 245);
   width: 245px;
+  height: 100vh;
+  background-color: rgb(245 245 245);
+  padding-left: 10px;
+  flex-shrink: 0;
   min-width: 245px;
   max-width: 480px;
-  height: 100vh;
-  padding-left: 10px;
 }
 
 .sidebar-header {
   display: flex;
   flex-direction: column;
-  margin-top: 20px;
   gap: 6px;
+  margin-top: 20px;
 }
 
 .sidebar-header__workspace-button {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: rgb(245, 245, 245);
+  gap: 0;
   font-family: Arial, Helvetica, sans-serif;
   font-size: 13px;
+  background-color: rgb(245 245 245);
   border: none;
   border-radius: 6px;
-  gap: 0;
   margin-right: 10px;
   padding-top: 12px;
   padding-bottom: 12px;
@@ -36,7 +36,7 @@
 }
 
 .sidebar-header__workspace-button:hover {
-  background-color: rgb(235, 235, 235);
+  background-color: rgb(235 235 235);
 }
 
 .sidebar-header__workspace-left {
@@ -49,17 +49,17 @@
   display: inline-flex;
   justify-content: center;
   align-items: center;
-  color: black;
   width: 16px;
   height: 16px;
-  margin-right: 7px;
   font-size: 15px;
+  color: black;
+  margin-right: 7px;
 }
 
 .sidebar-header__rename-workspace-button {
+  font-size: 14px;
   color: black;
   background-color: transparent;
-  font-size: 14px;
   border: none;
   border-radius: 50%;
   padding: 2px;
@@ -70,10 +70,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: rgb(20, 130, 204);
-  background-color: rgb(245, 245, 245);
   font-family: Arial, Helvetica, sans-serif;
   font-size: 13px;
+  color: rgb(20 130 204);
+  background-color: rgb(245 245 245);
   border: none;
   border-radius: 6px;
   margin-right: 10px;
@@ -84,7 +84,7 @@
 }
 
 .sidebar-header__create-new-workspace-button:hover {
-  background-color: rgb(235, 235, 235);
+  background-color: rgb(235 235 235);
 }
 
 .sidebar-middle {
@@ -97,13 +97,13 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 25px;
   gap: 50px;
+  margin-bottom: 25px;
 }
 
 .sidebar-footer__delete-workspace-button {
   color: white;
-  background-color: rgb(218, 74, 74);
+  background-color: rgb(218 74 74);
   border: none;
   border-radius: 6px;
   padding: 8px 22px;
@@ -111,14 +111,14 @@
 }
 
 .sidebar-footer__delete-workspace-button:hover {
-  background-color: rgb(189, 64, 64);
+  background-color: rgb(189 64 64);
 }
 
 .sidebar-footer__trash-button {
   display: flex;
   align-items: center;
-  gap: 6px;
   width: 96%;
+  gap: 6px;
   font-family: Arial, Helvetica, sans-serif;
   font-size: 13px;
   border: none;
@@ -132,7 +132,7 @@
 
 .sidebar-footer__logout-button {
   color: black;
-  background-color: rgb(218, 218, 218);
+  background-color: rgb(218 218 218);
   border: none;
   border-radius: 6px;
   padding: 5px 20px;
@@ -140,5 +140,5 @@
 }
 
 .sidebar-footer__logout-button:hover {
-  background-color: rgb(201, 201, 201);
+  background-color: rgb(201 201 201);
 }
