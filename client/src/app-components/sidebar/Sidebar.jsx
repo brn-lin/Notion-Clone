@@ -82,6 +82,8 @@ const Sidebar = () => {
     const ws = workspaces.find((w) => w.id === id);
     setWorkspaceId(id);
     setWorkspaceName(ws?.name || "");
+
+    navigate("/editor");
   };
 
   // Rename workspace
@@ -216,7 +218,10 @@ const Sidebar = () => {
           </button>
         )}
 
-        <button className="sidebar-footer__trash-button">
+        <button
+          className="sidebar-footer__trash-button"
+          onClick={() => navigate("/editor/trash")}
+        >
           <RiDeleteBinLine />
           <span>Trash</span>
         </button>
