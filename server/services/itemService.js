@@ -762,7 +762,6 @@ const restoreItemService = async ({ workspaceId, itemId }) => {
           WHERE workspace_id = $1
             AND parent_id IS NULL
             AND deleted_at IS NULL
-          FOR UPDATE
         `;
         values = [workspaceId];
       } else {
@@ -773,7 +772,6 @@ const restoreItemService = async ({ workspaceId, itemId }) => {
           WHERE workspace_id = $1
             AND parent_id = $2
             AND deleted_at IS NULL
-          FOR UPDATE
         `;
         values = [workspaceId, item.parent_id];
       }
