@@ -1,8 +1,8 @@
 .block__content {
+  width: 100%;
+  border: none;
+  padding: 8px 6px;
   font: inherit;
   background: transparent;
-  width: 100%;
-  padding: 8px 6px;
-  border: none;
   outline: none;
 }

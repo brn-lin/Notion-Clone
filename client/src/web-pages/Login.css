@@ -17,9 +17,9 @@
   background-color: rgb(69 93 211);
   border: none;
   border-radius: 8px;
+  cursor: pointer;
   margin-top: 10px;
   padding: 10px;
-  cursor: pointer;
 }
 
 .login__form {
@@ -51,9 +51,9 @@
   background-color: rgb(58 132 228);
   border: none;
   border-radius: 8px;
+  cursor: pointer;
   margin-top: 10px;
   padding: 10px;
-  cursor: pointer;
 }
 
 .login__signup-row {
@@ -78,11 +78,11 @@
   color: rgb(102 102 102);
   background-color: transparent;
   border: none;
+  cursor: pointer;
   padding: 0;
   text-decoration: underline;
   text-underline-offset: 2px;
   text-decoration-color: rgb(102 102 102);
-  cursor: pointer;
 }
 
 .login__signup-link:hover {
