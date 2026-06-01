@@ -44,8 +44,10 @@ export default {
           "background-color",
           "border",
           "border-radius",
+          "transition",
           "box-shadow",
           "opacity",
+          "cursor",
         ],
       },
 
