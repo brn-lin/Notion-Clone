@@ -809,6 +809,71 @@ const restoreItemService = async ({ workspaceId, itemId }) => {
   }
 };
 
+// ------------------
+// Permanently delete an item and all descendants
+// ------------------
+
+const permanentlyDeleteItemService = async ({ workspaceId, itemId }) => {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    // Verify item exists and is in trash
+    const itemResult = await client.query(
+      `
+      SELECT id
+      FROM items
+      WHERE id = $1
+        AND workspace_id = $2
+        AND deleted_at IS NOT NULL
+      `,
+      [itemId, workspaceId],
+    );
+
+    if (itemResult.rows.length === 0) {
+      throw new Error("Deleted item not found");
+    }
+
+    // Build subtree
+    const deleteResult = await client.query(
+      `
+      WITH RECURSIVE item_tree AS (
+        SELECT id
+        FROM items
+        WHERE id = $1
+          AND workspace_id = $2
+
+        UNION ALL
+
+        SELECT i.id
+        FROM items i
+        INNER JOIN item_tree it
+          ON i.parent_id = it.id
+        WHERE i.workspace_id = $2
+      )
+
+      DELETE FROM items
+      WHERE id IN (SELECT id FROM item_tree)
+      RETURNING id
+      `,
+      [itemId, workspaceId],
+    );
+
+    await client.query("COMMIT");
+
+    return {
+      deletedIds: deleteResult.rows.map((r) => r.id),
+      count: deleteResult.rowCount,
+    };
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
+};
+
 module.exports = {
   createItemService,
   getItemsInWorkspaceService,
@@ -818,4 +883,5 @@ module.exports = {
   softDeleteItemService,
   getTrashItemsService,
   restoreItemService,
+  permanentlyDeleteItemService,
 };

@@ -94,4 +94,15 @@ router.post(
   itemController.restoreItemController,
 );
 
+// ------------------
+// Permanently delete an item and all descendants
+// ------------------
+
+router.delete(
+  "/:workspaceId/items/:itemId/permanent",
+  authMiddleware,
+  workspaceAuth("member"),
+  itemController.permanentlyDeleteItemController,
+);
+
 module.exports = router;

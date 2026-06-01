@@ -284,6 +284,40 @@ const restoreItemController = async (req, res) => {
   }
 };
 
+// ------------------
+// Permanently delete an item and all descendants
+// ------------------
+
+const permanentlyDeleteItemController = async (req, res) => {
+  const workspaceId = req.workspaceId;
+  const { itemId } = req.params;
+
+  try {
+    const result = await itemService.permanentlyDeleteItemService({
+      workspaceId,
+      itemId,
+    });
+
+    return res.status(200).json({
+      message: "Item permanently deleted",
+      deletedIds: result.deletedIds,
+      count: result.count,
+    });
+  } catch (err) {
+    console.error("Error permanently deleting item:", err);
+
+    if (err.message === "Deleted item not found") {
+      return res.status(404).json({
+        error: err.message,
+      });
+    }
+
+    return res.status(500).json({
+      error: "Failed to permanently delete item",
+    });
+  }
+};
+
 module.exports = {
   createItemController,
   getItemsInWorkspaceController,
@@ -293,4 +327,5 @@ module.exports = {
   softDeleteItemController,
   getTrashItemsController,
   restoreItemController,
+  permanentlyDeleteItemController,
 };

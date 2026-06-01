@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
 import { useWorkspace } from "../../context/WorkspaceContext";
+import { RiDeleteBinLine } from "react-icons/ri";
 import "./Trash.css";
 
 const Trash = () => {
@@ -32,10 +33,27 @@ const Trash = () => {
     try {
       await api.post(`/workspaces/${workspaceId}/items/${itemId}/restore`);
 
-      // Remove restored item from UI
+      // Remove item from UI
       setItems((prev) => prev.filter((i) => i.id !== itemId));
     } catch (err) {
       console.error("Restore failed:", err);
+    }
+  };
+
+  const handlePermanentDelete = async (itemId) => {
+    const confirmed = window.confirm(
+      "This will permanently delete this page and cannot be undone. Continue?",
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await api.delete(`/workspaces/${workspaceId}/items/${itemId}/permanent`);
+
+      // Remove item from UI
+      setItems((prev) => prev.filter((i) => i.id !== itemId));
+    } catch (err) {
+      console.error("Permanent delete failed:", err);
     }
   };
 
@@ -62,12 +80,21 @@ const Trash = () => {
                 </div>
               </div>
 
-              <button
-                className="trash__restore-button"
-                onClick={() => handleRestore(item.id)}
-              >
-                Restore
-              </button>
+              <div className="trash__actions">
+                <button
+                  className="trash__restore-button"
+                  onClick={() => handleRestore(item.id)}
+                >
+                  Restore
+                </button>
+
+                <button
+                  className="trash__delete-button"
+                  onClick={() => handlePermanentDelete(item.id)}
+                >
+                  <RiDeleteBinLine />
+                </button>
+              </div>
             </div>
           ))}
         </div>
