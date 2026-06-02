@@ -835,7 +835,7 @@ const permanentlyDeleteItemService = async ({ workspaceId, itemId }) => {
       throw new Error("Deleted item not found");
     }
 
-    // Build subtree
+    // Build recursive tree for permanently deleting an item
     const deleteResult = await client.query(
       `
       WITH RECURSIVE item_tree AS (
