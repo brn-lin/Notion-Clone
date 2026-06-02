@@ -206,8 +206,6 @@ const Sidebar = () => {
         </button>
       </div>
 
-      <div className="sidebar-middle"></div>
-
       <div className="sidebar-footer">
         {workspaceId && (
           <button
