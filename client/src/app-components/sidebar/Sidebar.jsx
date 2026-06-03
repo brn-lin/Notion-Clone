@@ -148,7 +148,7 @@ const Sidebar = () => {
     if (!workspaceId) return;
 
     const confirmDelete = window.confirm(
-      "Are you sure you want to delete this workspace? This action cannot be undone.",
+      "Are you sure you want to permanently delete this workspace? This will permanently delete the workspace and all of its pages. This action cannot be undone.",
     );
 
     if (!confirmDelete) return;

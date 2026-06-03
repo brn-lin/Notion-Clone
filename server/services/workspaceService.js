@@ -95,167 +95,24 @@ const getWorkspaceService = async (workspaceId) => {
 };
 
 // ------------------
-// Soft delete a workspace by ID (And all pages in it)
+// Hard delete a workspace by ID (And all pages in it)
 // ------------------
 
-const softDeleteWorkspaceService = async (workspaceId) => {
-  const client = await pool.connect();
+const deleteWorkspaceService = async (workspaceId) => {
+  const result = await pool.query(
+    `
+    DELETE FROM workspaces
+    WHERE id = $1
+    RETURNING id
+    `,
+    [workspaceId],
+  );
 
-  try {
-    await client.query("BEGIN");
-
-    // Verify workspace exists and is not already deleted
-    const existingWorkspace = await client.query(
-      `
-      SELECT id
-      FROM workspaces
-      WHERE id = $1
-        AND deleted_at IS NULL
-      `,
-      [workspaceId],
-    );
-
-    if (existingWorkspace.rows.length === 0) {
-      throw new Error("Workspace not found");
-    }
-
-    // Soft delete workspace
-    await client.query(
-      `
-      UPDATE workspaces
-      SET deleted_at = NOW()
-      WHERE id = $1
-      `,
-      [workspaceId],
-    );
-
-    // Soft delete all pages in the workspace recursively
-    await client.query(
-      `
-      WITH RECURSIVE item_tree AS (
-        SELECT id from items
-        WHERE workspace_id = $1
-          AND parent_id IS NULL
-          AND deleted_at IS NULL
-        
-        UNION ALL
-
-        SELECT i.id
-        FROM items i
-        INNER JOIN item_tree it
-          ON i.parent_id = it.id
-        WHERE i.workspace_id = $1
-      )
-
-      UPDATE items
-      SET deleted_at = NOW()
-      WHERE id IN (SELECT id FROM item_tree)
-        AND deleted_at IS NULL
-      `,
-      [workspaceId],
-    );
-
-    await client.query("COMMIT");
-
-    // Return soft deleted workspace ID
-    return { id: workspaceId };
-  } catch (err) {
-    await client.query("ROLLBACK");
-    throw err;
-  } finally {
-    client.release();
+  if (result.rowCount === 0) {
+    throw new Error("Workspace not found");
   }
-};
 
-// ------------------
-// Restore a soft deleted workspace and all pages in it (Within 30 days)
-// ------------------
-
-const restoreWorkspaceService = async (workspaceId) => {
-  const client = await pool.connect();
-
-  try {
-    await client.query("BEGIN");
-
-    // Fetch workspace
-    const workspaceResult = await client.query(
-      `
-      SELECT id, deleted_at
-      FROM workspaces
-      WHERE id = $1
-      `,
-      [workspaceId],
-    );
-
-    if (workspaceResult.rows.length === 0) {
-      throw new Error("Workspace not found");
-    }
-
-    const workspace = workspaceResult.rows[0];
-
-    // Workspace must be deleted
-    if (!workspace.deleted_at) {
-      throw new Error("Workspace is not deleted");
-    }
-
-    // Check 30 day restore window
-    const expiredResult = await client.query(
-      `
-      SELECT NOW() - $1::timestamp > INTERVAL '30 days' AS expired
-      `,
-      [workspace.deleted_at],
-    );
-
-    if (expiredResult.rows[0].expired) {
-      throw new Error("Restore window expired");
-    }
-
-    // Restore workspace
-    await client.query(
-      `
-      UPDATE workspaces
-      SET deleted_at = NULL
-      WHERE id = $1
-      `,
-      [workspaceId],
-    );
-
-    // Restore only pages that were deleted with the workspace
-    await client.query(
-      `
-      WITH RECURSIVE item_tree AS (
-        SELECT id
-        FROM items
-        WHERE workspace_id = $1
-          AND parent_id IS NULL
-        
-        UNION ALL
-
-        SELECT i.id
-        FROM items i
-        INNER JOIN item_tree it
-          ON i.parent_id = it.id
-        WHERE i.workspace_id = $1
-      )
-
-      UPDATE items
-      SET deleted_at = NULL
-      WHERE id IN (SELECT id FROM item_tree)
-        AND deleted_at IS NOT NULL
-        AND deleted_at >= $2
-      `,
-      [workspaceId, workspace.deleted_at],
-    );
-
-    await client.query("COMMIT");
-
-    return { id: workspaceId };
-  } catch (err) {
-    await client.query("ROLLBACK");
-    throw err;
-  } finally {
-    client.release();
-  }
+  return result.rows[0];
 };
 
 // ------------------
@@ -314,8 +171,7 @@ module.exports = {
   renameWorkspaceService,
   getAllWorkspacesService,
   getWorkspaceService,
-  softDeleteWorkspaceService,
-  restoreWorkspaceService,
+  deleteWorkspaceService,
   addMemberService,
   updateMemberRoleService,
   removeMemberService,

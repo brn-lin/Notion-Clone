@@ -19,15 +19,6 @@ const nightlyCleanUp = cron.schedule("0 0 * * *", async () => {
       `,
     );
 
-    // Hard delete workspaces
-    const workspacesResult = await pool.query(
-      `
-      DELETE FROM workspaces
-      WHERE deleted_at IS NOT NULL
-        AND deleted_at < NOW() - INTERVAL '30 days'
-      `,
-    );
-
     // Hard delete items
     const itemsResult = await pool.query(
       `
@@ -38,8 +29,7 @@ const nightlyCleanUp = cron.schedule("0 0 * * *", async () => {
     );
 
     console.log(
-      `Clean up complete: ${usersResult.rowCount} users, ${workspacesResult.rowCount} workspaces, and 
-      ${itemsResult.rowCount} items deleted.`,
+      `Clean up complete: ${usersResult.rowCount} users and ${itemsResult.rowCount} items deleted.`,
     );
   } catch (err) {
     console.error("Clean up cron error:", err);

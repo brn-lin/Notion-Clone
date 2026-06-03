@@ -41,25 +41,14 @@ router.get(
 );
 
 // ------------------
-// Soft delete a workspace (owner-only)
+// Hard delete a workspace (owner-only)
 // ------------------
 
 router.delete(
   "/:workspaceId",
   authMiddleware,
   workspaceAuth("owner"),
-  workspaceController.softDeleteWorkspaceController,
-);
-
-// ------------------
-// Restore a workspace (owner only)
-// ------------------
-
-router.post(
-  "/:workspaceId/restore",
-  authMiddleware,
-  workspaceAuth("owner"),
-  workspaceController.restoreWorkspaceController,
+  workspaceController.deleteWorkspaceController,
 );
 
 // ------------------

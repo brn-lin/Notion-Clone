@@ -102,19 +102,20 @@ const getWorkspaceController = async (req, res) => {
 };
 
 // ------------------
-// Soft delete a workspace (owner-only)
+// Hard delete a workspace (owner-only)
 // ------------------
 
-const softDeleteWorkspaceController = async (req, res) => {
+const deleteWorkspaceController = async (req, res) => {
   try {
-    const result = await workspaceService.softDeleteWorkspaceService(
+    const result = await workspaceService.deleteWorkspaceService(
       req.workspaceId,
     );
 
     // Successful response
-    res
-      .status(200)
-      .json({ message: "Workspace successfully deleted", id: result.id });
+    return res.status(200).json({
+      message: "Workspace successfully deleted",
+      id: result.id,
+    });
   } catch (err) {
     if (err.message === "Workspace not found") {
       return res.status(404).json({
@@ -122,44 +123,11 @@ const softDeleteWorkspaceController = async (req, res) => {
       });
     }
 
-    console.error("Error soft deleting workspace:", err);
+    console.error("Delete workspace error:", err);
 
-    return res.status(500).json({ error: "Failed to delete workspace" });
-  }
-};
-
-// ------------------
-// Restore a workspace (owner only)
-// ------------------
-
-const restoreWorkspaceController = async (req, res) => {
-  try {
-    const result = await workspaceService.restoreWorkspaceService(
-      req.workspaceId,
-    );
-
-    return res.status(200).json({
-      message: "Workspace successfully restored",
-      id: result.id,
+    return res.status(500).json({
+      error: "Failed to delete workspace",
     });
-  } catch (err) {
-    if (err.message === "Workspace not found") {
-      return res.status(404).json({ error: err.message });
-    }
-
-    if (err.message === "Workspace is not deleted") {
-      return res.status(400).json({ error: err.message });
-    }
-
-    if (err.message === "Restore window expired") {
-      return res.status(400).json({
-        error: "Workspace can no longer be restored",
-      });
-    }
-
-    console.error("Restore workspace error:", err);
-
-    return res.status(500).json({ error: "Failed to restore workspace" });
   }
 };
 
@@ -273,8 +241,7 @@ module.exports = {
   renameWorkspaceController,
   getAllWorkspacesController,
   getWorkspaceController,
-  softDeleteWorkspaceController,
-  restoreWorkspaceController,
+  deleteWorkspaceController,
   addMemberController,
   updateMemberRoleController,
   removeMemberController,
