@@ -42,6 +42,7 @@ export default {
         properties: [
           "color",
           "background-color",
+          "background",
           "border",
           "border-radius",
           "transition",
@@ -49,6 +50,11 @@ export default {
           "opacity",
           "cursor",
         ],
+      },
+
+      {
+        groupName: "Generated content",
+        properties: ["content"],
       },
 
       {
