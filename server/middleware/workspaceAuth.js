@@ -19,7 +19,6 @@ const workspaceAuth = (requiredRole = "viewer") => {
           ON w.id = wm.workspace_id
         WHERE w.id = $1
           AND wm.user_id = $2
-          AND w.deleted_at is NULL
         `,
         [workspaceId, req.user.id],
       );

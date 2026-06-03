@@ -24,7 +24,6 @@ const authMiddleware = async (req, res, next) => {
       SELECT id
       FROM users
       WHERE id = $1
-        AND deleted_at IS NULL
       `,
       [decoded.id],
     );
