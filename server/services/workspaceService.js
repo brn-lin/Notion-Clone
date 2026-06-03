@@ -50,7 +50,6 @@ const renameWorkspaceService = async (workspaceId, name) => {
     UPDATE workspaces
     SET name = $1
     WHERE id = $2
-      AND deleted_at IS NULL
     RETURNING *
     `,
     [name, workspaceId],
@@ -71,7 +70,6 @@ const getAllWorkspacesService = async (userId) => {
     JOIN workspace_members wm
       ON w.id = wm.workspace_id
     WHERE wm.user_id = $1
-      AND w.deleted_at IS NULL
     `,
     [userId],
   );
