@@ -16,6 +16,10 @@ const Sidebar = () => {
   const [editingWorkspaceId, setEditingWorkspaceId] = useState(null);
   const [editingName, setEditingName] = useState("");
 
+  // Resize sidebar state
+  const [sidebarWidth, setSidebarWidth] = useState(245);
+  const [isDragging, setIsDragging] = useState(false);
+
   // Fetch workspaces on mount
   useEffect(() => {
     const fetchWorkspaces = async () => {
@@ -40,6 +44,36 @@ const Sidebar = () => {
 
     fetchWorkspaces();
   }, []);
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMouseMove = (e) => {
+      const newWidth = Math.min(Math.max(e.clientX, 245), 480);
+
+      setSidebarWidth(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging]);
+
+  useEffect(() => {
+    document.body.style.userSelect = isDragging ? "none" : "";
+
+    return () => {
+      document.body.style.userSelect = "";
+    };
+  }, [isDragging]);
 
   // Log out
   const handleLogout = () => {
@@ -143,7 +177,7 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="sidebar">
+    <div className="sidebar" style={{ width: `${sidebarWidth}px` }}>
       <div className="sidebar-header">
         {workspaces.map((ws) => (
           <div
@@ -231,6 +265,11 @@ const Sidebar = () => {
           Log out
         </button>
       </div>
+
+      <div
+        className="sidebar__resize-handle"
+        onMouseDown={() => setIsDragging(true)}
+      />
     </div>
   );
 };
