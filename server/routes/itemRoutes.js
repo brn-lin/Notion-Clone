@@ -105,4 +105,15 @@ router.delete(
   itemController.permanentlyDeleteItemController,
 );
 
+// ------------------
+// Permanently delete all trash items
+// ------------------
+
+router.delete(
+  "/:workspaceId/items/trash/empty",
+  authMiddleware,
+  workspaceAuth("member"),
+  itemController.emptyTrashController,
+);
+
 module.exports = router;

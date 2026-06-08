@@ -318,6 +318,34 @@ const permanentlyDeleteItemController = async (req, res) => {
   }
 };
 
+// ------------------
+// Permanently delete all trash items
+// ------------------
+
+const emptyTrashController = async (req, res) => {
+  const workspaceId = req.workspaceId;
+  const userId = req.user.id;
+
+  try {
+    const result = await itemService.emptyTrashService({
+      workspaceId,
+      userId,
+    });
+
+    return res.status(200).json({
+      message: "Trash emptied",
+      deletedIds: result.deletedIds,
+      count: result.count,
+    });
+  } catch (err) {
+    console.error("Error emptying trash:", err);
+
+    return res.status(500).json({
+      error: "Failed to empty trash",
+    });
+  }
+};
+
 module.exports = {
   createItemController,
   getItemsInWorkspaceController,
@@ -328,4 +356,5 @@ module.exports = {
   getTrashItemsController,
   restoreItemController,
   permanentlyDeleteItemController,
+  emptyTrashController,
 };

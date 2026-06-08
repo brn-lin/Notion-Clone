@@ -874,6 +874,42 @@ const permanentlyDeleteItemService = async ({ workspaceId, itemId }) => {
   }
 };
 
+// ------------------
+// Permanently delete all trash items
+// ------------------
+
+const emptyTrashService = async ({ workspaceId, userId }) => {
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const deleteResult = await client.query(
+      `
+      DELETE FROM items
+      WHERE workspace_id = $1
+        AND type = 'page'
+        AND deleted_at IS NOT NULL
+        AND trashed_by_id = $2
+      RETURNING id
+      `,
+      [workspaceId, userId],
+    );
+
+    await client.query("COMMIT");
+
+    return {
+      deletedIds: deleteResult.rows.map((r) => r.id),
+      count: deleteResult.rowCount,
+    };
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
+};
+
 module.exports = {
   createItemService,
   getItemsInWorkspaceService,
@@ -884,4 +920,5 @@ module.exports = {
   getTrashItemsService,
   restoreItemService,
   permanentlyDeleteItemService,
+  emptyTrashService,
 };

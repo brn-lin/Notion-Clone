@@ -57,13 +57,38 @@ const Trash = () => {
     }
   };
 
+  const handleEmptyTrash = async () => {
+    const confirmed = window.confirm(
+      "This will permanently delete ALL pages in Trash. This action cannot be undone. Continue?",
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await api.delete(`/workspaces/${workspaceId}/items/trash/empty`);
+
+      // Clear Trash UI
+      setItems([]);
+    } catch (err) {
+      console.error("Failed to empty trash:", err);
+    }
+  };
+
   if (loading) {
     return <div className="trash">Loading trash...</div>;
   }
 
   return (
     <div className="trash">
-      <h2 className="trash__title">Trash</h2>
+      <div className="trash__header">
+        <h2 className="trash__title">Trash</h2>
+
+        {items.length > 0 && (
+          <button className="trash__empty-button" onClick={handleEmptyTrash}>
+            Empty Trash
+          </button>
+        )}
+      </div>
 
       {items.length === 0 ? (
         <div className="trash__empty">Trash is empty</div>

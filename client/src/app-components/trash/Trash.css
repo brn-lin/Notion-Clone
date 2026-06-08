@@ -5,9 +5,31 @@
   overflow-y: auto;
 }
 
+.trash__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
 .trash__title {
   font-size: 22px;
   margin-bottom: 20px;
+}
+
+.trash__empty-button {
+  color: white;
+  background-color: rgb(218 74 74);
+  border: none;
+  border-radius: 6px;
+  transition: background-color 0.1s ease;
+  cursor: pointer;
+  margin-right: 15px;
+  padding: 8px 12px;
+}
+
+.trash__empty-button:hover {
+  background-color: rgb(189 64 64);
 }
 
 .trash__empty {
