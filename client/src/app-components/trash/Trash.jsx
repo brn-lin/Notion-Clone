@@ -42,7 +42,7 @@ const Trash = () => {
 
   const handlePermanentDelete = async (itemId) => {
     const confirmed = window.confirm(
-      "This will permanently delete this page and cannot be undone. Continue?",
+      "This will permanently delete this page. This action cannot be undone. Continue?",
     );
 
     if (!confirmed) return;
