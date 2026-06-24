@@ -2,6 +2,10 @@ import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+if (!API_URL) {
+  throw new Error("Missing VITE_API_URL");
+}
+
 const api = axios.create({
   baseURL: API_URL,
 });
@@ -12,7 +16,9 @@ api.interceptors.request.use((config) => {
 
   const publicRoutes = ["/auth/login", "/auth/signup"];
 
-  if (token && !publicRoutes.includes(config.url)) {
+  const url = config.url ?? "";
+
+  if (token && !publicRoutes.includes(url)) {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
