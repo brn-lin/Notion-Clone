@@ -1,19 +1,27 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWorkspace } from "../../context/WorkspaceContext";
 import api from "../../api/axios";
 import { MdOutlineDriveFileRenameOutline } from "react-icons/md";
-import "./Sidebar.css";
 import { RiDeleteBinLine } from "react-icons/ri";
+import "./Sidebar.css";
+
+type Workspace = {
+  id: string;
+  name: string;
+};
 
 const Sidebar = () => {
   const navigate = useNavigate();
 
   const { workspaceId, setWorkspaceId, setWorkspaceName } = useWorkspace();
-  const [workspaces, setWorkspaces] = useState([]);
+
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
 
   // Renaming workspace state
-  const [editingWorkspaceId, setEditingWorkspaceId] = useState(null);
+  const [editingWorkspaceId, setEditingWorkspaceId] = useState<string | null>(
+    null,
+  );
   const [editingName, setEditingName] = useState("");
 
   // Resize sidebar state
@@ -27,7 +35,7 @@ const Sidebar = () => {
       if (!token) return;
 
       try {
-        const res = await api.get("/workspaces");
+        const res = await api.get<Workspace[]>("/workspaces");
 
         setWorkspaces(res.data);
 
@@ -48,7 +56,7 @@ const Sidebar = () => {
   useEffect(() => {
     if (!isDragging) return;
 
-    const handleMouseMove = (e) => {
+    const handleMouseMove = (e: globalThis.MouseEvent) => {
       const newWidth = Math.min(Math.max(e.clientX, 245), 480);
 
       setSidebarWidth(newWidth);
@@ -87,7 +95,7 @@ const Sidebar = () => {
 
   const handleCreateWorkspace = async () => {
     try {
-      const workspaceRes = await api.post("/workspaces", {
+      const workspaceRes = await api.post<Workspace>("/workspaces", {
         name: "New Workspace",
       });
 
@@ -112,7 +120,7 @@ const Sidebar = () => {
     }
   };
 
-  const openWorkspace = (id) => {
+  const openWorkspace = (id: string) => {
     const ws = workspaces.find((w) => w.id === id);
     setWorkspaceId(id);
     setWorkspaceName(ws?.name || "");
@@ -121,7 +129,7 @@ const Sidebar = () => {
   };
 
   // Rename workspace
-  const handleRenameWorkspace = async (id) => {
+  const handleRenameWorkspace = async (id: string) => {
     if (!editingName.trim()) return;
 
     try {
@@ -182,7 +190,7 @@ const Sidebar = () => {
         {workspaces.map((ws) => (
           <div
             key={ws.id}
-            className={"sidebar-header__workspace-button"}
+            className="sidebar-header__workspace-button"
             onClick={() => openWorkspace(ws.id)}
             role="button"
             tabIndex={0}
