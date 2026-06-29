@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import type { FormEvent } from "react";
+import type { AxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import { useWorkspace } from "../context/WorkspaceContext";
@@ -22,7 +24,7 @@ function Login() {
     }
   }, [navigate]);
 
-  const handleLogin = async (e) => {
+  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoginLoading(true);
 
@@ -54,7 +56,10 @@ function Login() {
       navigate("/editor");
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "Login failed");
+
+      const error = err as AxiosError<{ message: string }>;
+
+      alert(error.response?.data?.message || "Login failed");
     } finally {
       setLoginLoading(false);
     }
