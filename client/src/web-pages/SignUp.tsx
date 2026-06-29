@@ -1,4 +1,6 @@
 import { useState } from "react";
+import type { FormEvent } from "react";
+import type { AxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import "./SignUp.css";
@@ -8,7 +10,7 @@ function SignUp() {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleSignUp = async (e) => {
+  const handleSignUp = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     try {
@@ -24,7 +26,12 @@ function SignUp() {
       navigate("/editor");
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "Sign up failed. Please try again.");
+
+      const error = err as AxiosError<{ message: string }>;
+
+      alert(
+        error.response?.data?.message || "Sign up failed. Please try again.",
+      );
     }
   };
 
