@@ -14,3 +14,7 @@ export type Item = {
   deleted_at: string | null;
   trashed_by_id: string | null;
 };
+
+export type TrashedItem = Item & {
+  deleted_at: string; // deleted_at is always a string in Trash
+};
