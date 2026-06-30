@@ -1,8 +1,9 @@
 import { useState } from "react";
-import type { FormEvent } from "react";
-import type { AxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import type { FormEvent } from "react";
+import type { AxiosError } from "axios";
+import type { LoginResponse } from "../types/auth";
 import "./SignUp.css";
 
 function SignUp() {
@@ -14,7 +15,7 @@ function SignUp() {
     e.preventDefault();
 
     try {
-      const res = await api.post("/auth/signup", {
+      const res = await api.post<LoginResponse>("/auth/signup", {
         email,
         password,
       });
