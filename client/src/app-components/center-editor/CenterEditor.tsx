@@ -12,21 +12,30 @@ import {
 import { arrayMove } from "@dnd-kit/sortable";
 
 import SortableItemList from "../items/SortableItemList";
+import type { DragEndEvent } from "@dnd-kit/core";
+import type { Item } from "../../types/item";
 import "./CenterEditor.css";
 
 const CenterEditor = () => {
-  const [itemsById, setItemsById] = useState({}); // Fast lookup by ID
-  const [childrenByParentId, setChildrenByParentId] = useState({}); // Children ordered by parent
-  const [currentItemId, setCurrentItemId] = useState(null);
-  const [itemStack, setItemStack] = useState([]); // Stack to track hierarchy
-  const [focusId, setFocusId] = useState(null);
+  const [itemsById, setItemsById] = useState<Record<string, Item>>({}); // Fast lookup by ID
+  const [childrenByParentId, setChildrenByParentId] = useState<
+    Record<string, string[]>
+  >({}); // Children ordered by parent
+  const [currentItemId, setCurrentItemId] = useState<string | null>(null);
+  const [itemStack, setItemStack] = useState<string[]>([]); // Stack to track hierarchy
+  const [focusId, setFocusId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
   const { workspaceId, workspaceName } = useWorkspace();
 
-  const saveTimeouts = useRef({});
+  const saveTimeouts = useRef<Record<string, ReturnType<typeof setTimeout>>>(
+    {},
+  );
 
-  const currentItem = itemsById[currentItemId];
+  // Root pages have parentId = null
+  const ROOT = "null";
+
+  const currentItem = currentItemId ? itemsById[currentItemId] : undefined;
 
   // Debug warning for stale page state
   if (currentItemId && !currentItem && Object.keys(itemsById).length > 0) {
@@ -52,15 +61,17 @@ const CenterEditor = () => {
     if (!token || !workspaceId) return;
 
     api
-      .get(`/workspaces/${workspaceId}/items`)
+      .get<Item[]>(`/workspaces/${workspaceId}/items`)
       .then((res) => {
         const items = res.data || [];
-        const byId = {};
-        const children = { null: [] }; // Root pages have parentId = null
+        const byId: Record<string, Item> = {};
+        const children: Record<string, string[]> = {
+          [ROOT]: [],
+        };
 
         items.forEach((item) => {
           byId[item.id] = item;
-          children[null].push(item.id);
+          children[ROOT].push(item.id);
         });
 
         setItemsById(byId);
@@ -75,9 +86,9 @@ const CenterEditor = () => {
   }, [workspaceId]);
 
   // Create a page
-  const handleCreatePage = async (parentId = null) => {
+  const handleCreatePage = async (parentId: string | null = null) => {
     try {
-      const res = await api.post(`/workspaces/${workspaceId}/items`, {
+      const res = await api.post<Item>(`/workspaces/${workspaceId}/items`, {
         type: "page",
         parentId,
       });
@@ -85,7 +96,7 @@ const CenterEditor = () => {
       const newPage = res.data;
 
       // Fetch auto-created blank block inside the new page
-      const childrenRes = await api.get(
+      const childrenRes = await api.get<Item[]>(
         `/workspaces/${workspaceId}/items/${newPage.id}/children`,
       );
 
@@ -104,7 +115,7 @@ const CenterEditor = () => {
       });
 
       setChildrenByParentId((prev) => {
-        const key = parentId ?? null;
+        const key = parentId ?? ROOT;
         return {
           ...prev,
           [key]: [...(prev[key] || []), newPage.id],
@@ -127,7 +138,7 @@ const CenterEditor = () => {
   };
 
   // Delete a page
-  const handleDeletePage = async (itemId) => {
+  const handleDeletePage = async (itemId: string) => {
     try {
       await api.delete(`/workspaces/${workspaceId}/items/${itemId}`);
 
@@ -163,18 +174,18 @@ const CenterEditor = () => {
   };
 
   // Open an item (Only pages should be navigated into)
-  const openItem = async (itemId) => {
+  const openItem = async (itemId: string) => {
     const item = itemsById[itemId];
     if (!item || item.type !== "page") return;
 
     if (!childrenByParentId[itemId]) {
       try {
-        const res = await api.get(
+        const res = await api.get<Item[]>(
           `/workspaces/${workspaceId}/items/${item.id}/children`,
         );
 
         const newItemsById = { ...itemsById };
-        const childIds = [];
+        const childIds: string[] = [];
 
         res.data.forEach((child) => {
           newItemsById[child.id] = child;
@@ -202,14 +213,14 @@ const CenterEditor = () => {
       return;
     }
     const newStack = [...itemStack];
-    const parentId = newStack.pop();
+    const parentId = newStack.pop() ?? null;
 
     setItemStack(newStack);
     setCurrentItemId(parentId);
   };
 
   // Inline editing for page title
-  const handlePageTitleChange = async (itemId, newTitle) => {
+  const handlePageTitleChange = async (itemId: string, newTitle: string) => {
     const item = itemsById[itemId];
 
     if (!item || item.type !== "page") return;
@@ -230,7 +241,7 @@ const CenterEditor = () => {
 
     saveTimeouts.current[itemId] = setTimeout(async () => {
       try {
-        await api.patch(`/workspaces/${workspaceId}/items/${itemId}`, {
+        await api.patch<Item>(`/workspaces/${workspaceId}/items/${itemId}`, {
           title: newTitle,
         });
       } catch (err) {
@@ -240,7 +251,7 @@ const CenterEditor = () => {
   };
 
   // Auto-save block text
-  const saveBlock = async (itemId, text) => {
+  const saveBlock = async (itemId: string, text: string) => {
     try {
       await api.patch(`/workspaces/${workspaceId}/items/${itemId}`, {
         content: { text },
@@ -250,8 +261,8 @@ const CenterEditor = () => {
     }
   };
 
-  //
-  const handleBlockChange = (itemId, text) => {
+  // Update block text
+  const handleBlockChange = (itemId: string, text: string) => {
     // Optimistic update
     setItemsById((prev) => ({
       ...prev,
@@ -275,7 +286,7 @@ const CenterEditor = () => {
   };
 
   // Pressing 'Enter' on an empty block creates a new block
-  const handleEnter = async (currentItem) => {
+  const handleEnter = async (currentItem: Item) => {
     try {
       const res = await api.post(`/workspaces/${workspaceId}/items`, {
         type: "block",
@@ -294,7 +305,7 @@ const CenterEditor = () => {
 
       // Add new block to currentl ist of siblings
       setChildrenByParentId((prev) => {
-        const parent = currentItem.parent_id ?? null;
+        const parent = currentItem.parent_id ?? ROOT;
         const siblings = [...(prev[parent] || [])];
         const index = siblings.indexOf(currentItem.id);
 
@@ -314,10 +325,10 @@ const CenterEditor = () => {
   };
 
   // Pressing 'Backspace' on an empty block deletes a new block
-  const handleDeleteBlock = async (item) => {
+  const handleDeleteBlock = async (item: Item) => {
     if (!item || item.type !== "block") return;
 
-    const parentId = item.parent_id ?? null;
+    const parentId = item.parent_id ?? ROOT;
     const siblings = childrenByParentId[parentId] || [];
     const index = siblings.indexOf(item.id);
 
@@ -351,13 +362,19 @@ const CenterEditor = () => {
   };
 
   // Drag-and-drop handler
-  const handleDragEnd = async (event, parentId = null) => {
+  const handleDragEnd = async (
+    event: DragEndEvent,
+    parentId: string | null = null,
+  ) => {
     const { active, over } = event;
+
+    const parentKey = parentId ?? ROOT;
+
     if (!over || active.id === over.id) return;
 
-    const items = childrenByParentId[parentId ?? null] || [];
-    const oldIndex = items.indexOf(active.id);
-    const newIndex = items.indexOf(over.id);
+    const items = childrenByParentId[parentKey] || [];
+    const oldIndex = items.indexOf(active.id as string);
+    const newIndex = items.indexOf(over.id as string);
     if (oldIndex === -1 || newIndex === -1) return;
 
     let adjustedIndex = newIndex;
@@ -370,11 +387,11 @@ const CenterEditor = () => {
     const newItems = arrayMove(items, oldIndex, newIndex);
     setChildrenByParentId((prev) => ({
       ...prev,
-      [parentId ?? null]: newItems,
+      [parentKey]: newItems,
     }));
 
     try {
-      const res = await api.patch(
+      const res = await api.patch<Item>(
         `/workspaces/${workspaceId}/items/${active.id}/move`,
         { newParentId: parentId, newIndex: adjustedIndex },
       );
@@ -390,13 +407,13 @@ const CenterEditor = () => {
       }));
     } catch (err) {
       console.error("Error moving page:", err);
-      setChildrenByParentId((prev) => ({ ...prev, [parentId ?? null]: items }));
+      setChildrenByParentId((prev) => ({ ...prev, [parentKey]: items }));
     }
   };
 
   const currentChildren = currentItemId
     ? childrenByParentId[currentItemId] || []
-    : childrenByParentId[null] || [];
+    : childrenByParentId[ROOT] || [];
 
   return (
     <div className="center-editor">
