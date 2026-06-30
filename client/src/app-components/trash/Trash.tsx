@@ -2,18 +2,21 @@ import { useEffect, useState } from "react";
 import api from "../../api/axios";
 import { useWorkspace } from "../../context/WorkspaceContext";
 import { RiDeleteBinLine } from "react-icons/ri";
+import type { TrashedItem } from "../../types/item";
 import "./Trash.css";
 
 const Trash = () => {
   const { workspaceId } = useWorkspace();
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState<TrashedItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchTrash = async () => {
     try {
       setLoading(true);
 
-      const res = await api.get(`/workspaces/${workspaceId}/items/trash`);
+      const res = await api.get<TrashedItem[]>(
+        `/workspaces/${workspaceId}/items/trash`,
+      );
 
       setItems(res.data || []);
     } catch (err) {
@@ -29,7 +32,7 @@ const Trash = () => {
   }, [workspaceId]);
 
   // Restore item
-  const handleRestore = async (itemId) => {
+  const handleRestore = async (itemId: string) => {
     try {
       await api.post(`/workspaces/${workspaceId}/items/${itemId}/restore`);
 
@@ -40,7 +43,7 @@ const Trash = () => {
     }
   };
 
-  const handlePermanentDelete = async (itemId) => {
+  const handlePermanentDelete = async (itemId: string) => {
     const confirmed = window.confirm(
       "This will permanently delete this page. This action cannot be undone. Continue?",
     );
