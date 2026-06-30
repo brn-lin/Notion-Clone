@@ -4,12 +4,8 @@ import { useWorkspace } from "../../context/WorkspaceContext";
 import api from "../../api/axios";
 import { MdOutlineDriveFileRenameOutline } from "react-icons/md";
 import { RiDeleteBinLine } from "react-icons/ri";
+import type { Workspace } from "../../types/workspace";
 import "./Sidebar.css";
-
-type Workspace = {
-  id: string;
-  name: string;
-};
 
 const Sidebar = () => {
   const navigate = useNavigate();
