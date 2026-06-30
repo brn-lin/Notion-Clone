@@ -1,10 +1,16 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useWorkspace } from "../context/WorkspaceContext";
+import api from "../api/axios";
 import type { FormEvent } from "react";
 import type { AxiosError } from "axios";
-import { useNavigate } from "react-router-dom";
-import api from "../api/axios";
-import { useWorkspace } from "../context/WorkspaceContext";
+import type { LoginResponse } from "../types/auth";
+import type { Workspace } from "../types/workspace";
 import "./Login.css";
+
+type DemoResetResponse = {
+  workspaceId: string;
+};
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -29,7 +35,7 @@ function Login() {
     setLoginLoading(true);
 
     try {
-      const res = await api.post("/auth/login", {
+      const res = await api.post<LoginResponse>("/auth/login", {
         email,
         password,
       });
@@ -42,7 +48,7 @@ function Login() {
       setWorkspaceId(null);
 
       // Fetch user's workspace
-      const wsRes = await api.get("/workspaces");
+      const wsRes = await api.get<Workspace[]>("/workspaces");
 
       const firstWorkspace = wsRes.data[0];
 
@@ -73,7 +79,7 @@ function Login() {
       await api.get("/ready");
 
       // Now login
-      const res = await api.post("/auth/login", {
+      const res = await api.post<LoginResponse>("/auth/login", {
         email: "demo@example.com",
         password: "demo123",
       });
@@ -81,7 +87,7 @@ function Login() {
       const token = res.data.token;
       sessionStorage.setItem("token", token);
 
-      const demoRes = await api.post("/demo/reset");
+      const demoRes = await api.post<DemoResetResponse>("/demo/reset");
 
       const workspaceId = demoRes.data.workspaceId;
 
