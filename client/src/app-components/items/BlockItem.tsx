@@ -1,14 +1,30 @@
 import { useState, useEffect, useRef } from "react";
+import type { ChangeEvent, KeyboardEvent } from "react";
+import type { BlockItemType } from "../../types/item";
 import "./BlockItem.css";
 
-const BlockItem = ({ item, onChange, onEnter, onBackspace, focusId }) => {
-  const [text, setText] = useState(item.content?.text || "");
+type BlockItemProps = {
+  item: BlockItemType;
+  onChange: (id: string, text: string) => void;
+  onEnter: (item: BlockItemType) => void;
+  onBackspace: (item: BlockItemType) => void;
+  focusId: string | null;
+};
 
-  const inputRef = useRef(null);
+const BlockItem = ({
+  item,
+  onChange,
+  onEnter,
+  onBackspace,
+  focusId,
+}: BlockItemProps) => {
+  const [text, setText] = useState(item.content.text || "");
+
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setText(item.content?.text || "");
-  }, [item.content?.text]);
+    setText(item.content.text || "");
+  }, [item.content.text]);
 
   // Focus when instructed by handleEnter function in CenterEditor.jsx
   useEffect(() => {
@@ -17,14 +33,14 @@ const BlockItem = ({ item, onChange, onEnter, onBackspace, focusId }) => {
     }
   }, [focusId, item.id]);
 
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setText(value);
 
     onChange(item.id, value);
   };
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
       onEnter(item);
