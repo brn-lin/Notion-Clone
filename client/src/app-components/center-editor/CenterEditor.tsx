@@ -226,13 +226,19 @@ const CenterEditor = () => {
     if (!item || item.type !== "page") return;
 
     // Update page title immediately (prevents caret jump)
-    setItemsById((prev) => ({
-      ...prev,
-      [itemId]: {
-        ...prev[itemId],
-        title: newTitle,
-      },
-    }));
+    setItemsById((prev) => {
+      const current = prev[itemId];
+
+      if (!current || current.type !== "page") return prev;
+
+      return {
+        ...prev,
+        [itemId]: {
+          ...current,
+          title: newTitle,
+        },
+      };
+    });
 
     // Debounce API call
     if (saveTimeouts.current[itemId]) {
