@@ -1,8 +1,9 @@
 import { RxDragHandleDots2 } from "react-icons/rx";
+import { useSortable } from "@dnd-kit/sortable";
 import "./DragHandle.css";
 
 type DragHandleProps = {
-  listeners?: Record<string, (...args: any[]) => void>;
+  listeners?: ReturnType<typeof useSortable>["listeners"];
 };
 
 const DragHandle = ({ listeners }: DragHandleProps) => {
