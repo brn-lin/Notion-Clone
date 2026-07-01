@@ -1,9 +1,9 @@
 import { RiDeleteBinLine } from "react-icons/ri";
-import type { Item } from "../../types/item";
+import type { PageItemType } from "../../types/item";
 import "./PageItem.css";
 
 type PageItemProps = {
-  item: Item;
+  item: PageItemType;
   onDelete: (id: string) => void;
 };
 
