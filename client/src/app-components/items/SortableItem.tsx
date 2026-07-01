@@ -5,7 +5,20 @@ import PageItem from "./PageItem";
 import BlockItem from "./BlockItem";
 import DragHandle from "../center-editor/DragHandle";
 
+import type { Item } from "../../types/item";
+
 import "./SortableItem.css";
+
+type SortableItemProps = {
+  item: Item;
+  onOpen: () => void;
+  onDelete: (id: string) => void;
+  onChange: (id: string, text: string) => void;
+  onEnter: (item: Item) => void;
+  onBackspace: (item: Item) => void;
+  focusId: string | null;
+  isDragging: boolean;
+};
 
 const SortableItem = ({
   item,
@@ -16,24 +29,12 @@ const SortableItem = ({
   onBackspace,
   focusId,
   isDragging,
-}) => {
+}: SortableItemProps) => {
   const { attributes, listeners, setNodeRef, transform } = useSortable({
     id: item.id,
   });
 
   const style = { transform: CSS.Transform.toString(transform) };
-
-  const renderItem = () => {
-    if (item.type === "page") {
-      return <PageItem item={item} />;
-    }
-
-    if (item.type === "block") {
-      return <BlockItem item={item} />;
-    }
-
-    return null;
-  };
 
   // If page, keep old drag behavior along with drag button
   if (item.type === "page") {
