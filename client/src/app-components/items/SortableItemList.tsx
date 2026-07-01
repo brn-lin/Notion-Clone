@@ -5,6 +5,18 @@ import {
 import axios from "axios";
 
 import SortableItem from "./SortableItem";
+import type { Item } from "../../types/item";
+
+type SortableItemListProps = {
+  items: Item[];
+  onOpen: (id: string) => void;
+  onDelete: (id: string) => void;
+  onChange: (id: string, text: string) => void;
+  onEnter: (item: Item) => void;
+  onBackspace: (item: Item) => void;
+  focusId: string | null;
+  isDragging: boolean;
+};
 
 const SortableItemList = ({
   items,
@@ -15,7 +27,7 @@ const SortableItemList = ({
   onBackspace,
   focusId,
   isDragging,
-}) => {
+}: SortableItemListProps) => {
   if (!Array.isArray(items)) return null;
 
   return (
