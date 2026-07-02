@@ -1,4 +1,4 @@
-const ROLE_HIERARCHY = {
+export const ROLE_HIERARCHY = {
   owner: 3,
   member: 2,
   viewer: 1,
@@ -12,5 +12,3 @@ export const hasRole = (userRole: Role, requiredRole: Role): boolean => {
 
   return userRank >= requiredRank;
 };
-
-module.exports = { ROLE_HIERARCHY, hasRole };
