@@ -1,36 +1,36 @@
 {
   "compilerOptions": {
-    /* JavaScript version to compile to */
+    /* JavaScript version */
     "target": "ES2022",
 
-    /* Module system for modern Node.js */
+    /* Node.js ESM system */
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
 
-    /* Compile output */
+    /* Output */
     "outDir": "./dist",
 
-    /* Type checking */
+    /* Type checking (strict mode ON) */
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
 
-    /* Node */
+    /* Node types */
     "types": ["node"],
 
-    /* Imports */
+    /* Import behavior */
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
+    "verbatimModuleSyntax": true,
 
     /* Quality of life */
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
 
-    /* Source maps for debugging */
+    /* Module behavior */
+    "moduleDetection": "force",
+
+    /* Debugging */
     "sourceMap": true
-  },
-
-  "include": ["**/*.ts"],
-
-  "exclude": ["node_modules", "dist"]
+  }
 }
