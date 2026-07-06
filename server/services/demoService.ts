@@ -8,7 +8,7 @@ type IdRow = {
   id: string;
 };
 
-const resetDemoWorkspace = async (demoUserId: string) => {
+export const resetDemoWorkspace = async (demoUserId: string) => {
   const client = await pool.connect();
 
   try {
@@ -136,5 +136,3 @@ const resetDemoWorkspace = async (demoUserId: string) => {
     client.release();
   }
 };
-
-export default resetDemoWorkspace;
