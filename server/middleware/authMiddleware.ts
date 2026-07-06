@@ -9,13 +9,9 @@ export type AuthTokenPayload = {
   exp?: number;
 };
 
-type AuthRequest = Request & {
-  user?: AuthTokenPayload;
-};
-
 // Middleware to protect routes
 export const authMiddleware = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {

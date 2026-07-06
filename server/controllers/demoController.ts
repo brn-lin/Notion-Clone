@@ -1,17 +1,12 @@
 import { resetDemoWorkspace } from "../services/demoService.js";
 import type { Request, Response } from "express";
-
-type AuthRequest = Request & {
-  user: {
-    id: string;
-  };
-};
+import { getUser } from "../utils/getUser.js";
 
 // ------------------
 // Reset Demo workspace
 // ------------------
 
-export const resetDemoController = async (req: AuthRequest, res: Response) => {
+export const resetDemoController = async (req: Request, res: Response) => {
   try {
     const workspaceId = await resetDemoWorkspace(req.user.id);
 
