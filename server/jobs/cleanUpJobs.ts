@@ -1,5 +1,5 @@
-const cron = require("node-cron");
-const pool = require("../db");
+import cron from "node-cron";
+import pool from "../db.js";
 
 // ------------------
 // Nightly hard delete clean up
@@ -36,4 +36,4 @@ const nightlyCleanUp = cron.schedule("0 0 * * *", async () => {
   }
 });
 
-module.exports = nightlyCleanUp;
+export default nightlyCleanUp;
