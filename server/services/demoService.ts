@@ -1,10 +1,14 @@
-const pool = require("../db");
+import pool from "../db.js";
 
 // ------------------
 // Reset Demo workspace
 // ------------------
 
-const resetDemoWorkspace = async (demoUserId) => {
+type IdRow = {
+  id: string;
+};
+
+export const resetDemoWorkspace = async (demoUserId: string) => {
   const client = await pool.connect();
 
   try {
@@ -40,7 +44,7 @@ const resetDemoWorkspace = async (demoUserId) => {
     );
 
     // Recreate workspace
-    const workspaceResult = await client.query(
+    const workspaceResult = await client.query<IdRow>(
       `
       INSERT INTO workspaces (name, owner_id)
       VALUES ('Demo Workspace', $1)
@@ -49,7 +53,13 @@ const resetDemoWorkspace = async (demoUserId) => {
       [demoUserId],
     );
 
-    const workspaceId = workspaceResult.rows[0].id;
+    const workspaceRow = workspaceResult.rows[0];
+
+    if (!workspaceRow) {
+      throw new Error("Failed to create workspace");
+    }
+
+    const workspaceId = workspaceRow.id;
 
     // Make user owner of workspace
     await client.query(
@@ -61,7 +71,7 @@ const resetDemoWorkspace = async (demoUserId) => {
     );
 
     // Seed starter page
-    const pageResult = await client.query(
+    const pageResult = await client.query<IdRow>(
       `
       INSERT INTO items (
         workspace_id,
@@ -78,7 +88,13 @@ const resetDemoWorkspace = async (demoUserId) => {
       [workspaceId, demoUserId],
     );
 
-    const pageId = pageResult.rows[0].id;
+    const pageRow = pageResult.rows[0];
+
+    if (!pageRow) {
+      throw new Error("Failed to create page");
+    }
+
+    const pageId = pageRow.id;
 
     // Seed starter block
     await client.query(
@@ -120,5 +136,3 @@ const resetDemoWorkspace = async (demoUserId) => {
     client.release();
   }
 };
-
-module.exports = { resetDemoWorkspace };
