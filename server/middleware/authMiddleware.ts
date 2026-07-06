@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import pool from "../db.js";
 import type { Request, Response, NextFunction } from "express";
 
-type AuthTokenPayload = {
+export type AuthTokenPayload = {
   id: string;
   email: string;
   iat?: number;
