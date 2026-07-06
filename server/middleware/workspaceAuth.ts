@@ -1,8 +1,21 @@
-const pool = require("../db");
-const { hasRole } = require("../utils/permissions");
+import pool from "../db.js";
+import type { Request, Response, NextFunction } from "express";
+import { hasRole, type Role } from "../utils/permissions.js";
+import type { AuthTokenPayload } from "./authMiddleware.js";
 
-const workspaceAuth = (requiredRole = "viewer") => {
-  return async (req, res, next) => {
+type WorkspaceRequest = Request & {
+  user: AuthTokenPayload;
+  workspaceId?: string;
+  memberRole?: Role;
+};
+
+type WorkspaceMemberRow = {
+  id: string;
+  role: Role;
+};
+
+export const workspaceAuth = (requiredRole: Role = "viewer") => {
+  return async (req: WorkspaceRequest, res: Response, next: NextFunction) => {
     const workspaceId = req.params.workspaceId;
 
     if (!workspaceId) {
@@ -11,7 +24,7 @@ const workspaceAuth = (requiredRole = "viewer") => {
 
     try {
       // Fetch membership directly from DB
-      const result = await pool.query(
+      const result = await pool.query<WorkspaceMemberRow>(
         `
         SELECT w.id, wm.role
         FROM workspaces w
@@ -27,7 +40,13 @@ const workspaceAuth = (requiredRole = "viewer") => {
         return res.status(403).json({ error: "Not a workspace member" });
       }
 
-      const { id, role } = result.rows[0];
+      const member = result.rows[0];
+
+      if (!member) {
+        return res.status(403).json({ error: "Not a workspace member" });
+      }
+
+      const { id, role } = member;
 
       // Checks if authenticaed user has the required workspace permissions, if not, return error
       if (!hasRole(role, requiredRole)) {
@@ -45,5 +64,3 @@ const workspaceAuth = (requiredRole = "viewer") => {
     }
   };
 };
-
-module.exports = { workspaceAuth };
