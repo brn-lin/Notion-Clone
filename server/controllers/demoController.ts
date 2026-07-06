@@ -8,7 +8,9 @@ import { getUser } from "../utils/getUser.js";
 
 export const resetDemoController = async (req: Request, res: Response) => {
   try {
-    const workspaceId = await resetDemoWorkspace(req.user.id);
+    const user = getUser(req);
+
+    const workspaceId = await resetDemoWorkspace(user.id);
 
     res.json({ workspaceId });
   } catch (err: unknown) {
