@@ -1,9 +1,10 @@
-const express = require("express");
-const router = express.Router();
-const rateLimit = require("express-rate-limit");
+import express from "express";
+import rateLimit from "express-rate-limit";
 
-const authController = require("../controllers/authController");
-const { authMiddleware } = require("../middleware/authMiddleware");
+import { authMiddleware } from "../middleware/authMiddleware.js";
+import * as authController from "../controllers/authController.js";
+
+const router = express.Router();
 
 // ------------------
 // Rate Limiters
@@ -57,4 +58,4 @@ router.get("/me", authMiddleware, authController.getCurrentUser);
 
 router.delete("/me", authMiddleware, authController.softDeleteCurrentUser);
 
-module.exports = router;
+export default router;
