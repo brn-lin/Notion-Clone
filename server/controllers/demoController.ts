@@ -1,12 +1,15 @@
-import { resetDemoWorkspace } from "../services/demoService.js";
 import type { Request, Response } from "express";
+import { resetDemoWorkspace } from "../services/demoService.js";
 import { getUser } from "../utils/getUser.js";
 
 // ------------------
 // Reset Demo workspace
 // ------------------
 
-export const resetDemoController = async (req: Request, res: Response) => {
+export const resetDemoController = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
     const user = getUser(req);
 
@@ -19,7 +22,8 @@ export const resetDemoController = async (req: Request, res: Response) => {
     const message = err instanceof Error ? err.message : "";
 
     if (message === "Demo workspace membership missing") {
-      return res.status(500).json({ error: message });
+      res.status(500).json({ error: message });
+      return;
     }
 
     res.status(500).json({ error: "Failed to reset demo workspace" });
