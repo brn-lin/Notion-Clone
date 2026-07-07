@@ -1,14 +1,57 @@
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const pool = require("../db");
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
-const { resetDemoWorkspace } = require("./demoService");
+import pool from "../db.js";
+import env from "../config/env.js";
+import { resetDemoWorkspace } from "./demoService.js";
+
+type User = {
+  id: string;
+  email: string;
+};
+
+type AuthResponse = {
+  token: string;
+  user: User;
+};
+
+type ReactivateResponse = {
+  message: string;
+  token: string;
+  user: User;
+};
+
+type DeleteResponse = {
+  message: string;
+  deletion_effective_in_days: number;
+};
+
+type LoginRow = {
+  id: string;
+  email: string;
+  password_hash: string;
+  is_demo: boolean;
+};
+
+type ReactivationRow = {
+  id: string;
+  email: string;
+  password_hash: string;
+  deleted_at: Date | null;
+};
+
+type ExpiredRow = {
+  expired: boolean;
+};
 
 // ------------------
 // Signup
 // ------------------
 
-const signup = async (email, password) => {
+const signup = async (
+  email: string,
+  password: string,
+): Promise<AuthResponse> => {
   const emailNormalized = email.toLowerCase().trim();
 
   // Hash the password
@@ -16,7 +59,7 @@ const signup = async (email, password) => {
 
   try {
     // Insert new user
-    const result = await pool.query(
+    const result = await pool.query<User>(
       `
       INSERT INTO users (email, password_hash)
       VALUES ($1, $2)
@@ -27,12 +70,14 @@ const signup = async (email, password) => {
 
     const user = result.rows[0];
 
+    if (!user) {
+      throw new Error("Failed to create user");
+    }
+
     // Generate JWT token
-    const token = jwt.sign(
-      { id: user.id, email: user.email },
-      process.env.JWT_SECRET,
-      { expiresIn: "24h" },
-    );
+    const token = jwt.sign({ id: user.id, email: user.email }, env.jwtSecret, {
+      expiresIn: "24h",
+    });
 
     return {
       token,
@@ -41,9 +86,14 @@ const signup = async (email, password) => {
         email: user.email,
       },
     };
-  } catch (err) {
+  } catch (err: unknown) {
     // Handle unique constraint violation
-    if (err.code === "23505") {
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "code" in err &&
+      err.code === "23505"
+    ) {
       throw new Error("Email already in use");
     }
 
@@ -55,11 +105,14 @@ const signup = async (email, password) => {
 // Login
 // ------------------
 
-const login = async (email, password) => {
+const login = async (
+  email: string,
+  password: string,
+): Promise<AuthResponse> => {
   const emailNormalized = email.toLowerCase().trim();
 
   // Fetch user by email
-  const result = await pool.query(
+  const result = await pool.query<LoginRow>(
     `
       SELECT id, email, password_hash, is_demo
       FROM users
@@ -75,6 +128,10 @@ const login = async (email, password) => {
 
   const user = result.rows[0];
 
+  if (!user) {
+    throw new Error("Invalid credentials");
+  }
+
   // Verify password
   const isValid = await bcrypt.compare(password, user.password_hash);
 
@@ -87,11 +144,9 @@ const login = async (email, password) => {
   }
 
   // Generate JWT
-  const token = jwt.sign(
-    { id: user.id, email: user.email },
-    process.env.JWT_SECRET,
-    { expiresIn: "24h" },
-  );
+  const token = jwt.sign({ id: user.id, email: user.email }, env.jwtSecret, {
+    expiresIn: "24h",
+  });
 
   return {
     token,
@@ -106,14 +161,17 @@ const login = async (email, password) => {
 // Reactivate account (Within 30 days)
 // ------------------
 
-const reactivateAccount = async (email, password) => {
+const reactivateAccount = async (
+  email: string,
+  password: string,
+): Promise<ReactivateResponse> => {
   const emailNormalized = email.toLowerCase().trim();
   const client = await pool.connect();
 
   try {
     await client.query("BEGIN");
 
-    const result = await client.query(
+    const result = await client.query<ReactivationRow>(
       `
       SELECT id, email, password_hash, deleted_at
       FROM users
@@ -122,11 +180,11 @@ const reactivateAccount = async (email, password) => {
       [emailNormalized],
     );
 
-    if (result.rows.length === 0) {
+    const user = result.rows[0];
+
+    if (!user) {
       throw new Error("Invalid credentials");
     }
-
-    const user = result.rows[0];
 
     // Must be soft deleted to reactivate
     if (!user.deleted_at) {
@@ -134,12 +192,18 @@ const reactivateAccount = async (email, password) => {
     }
 
     // Check 30 day window
-    const deletionExpired = await client.query(
+    const deletionExpired = await client.query<ExpiredRow>(
       `SELECT NOW() - $1::timestamp > INTERVAL '30 days' AS expired`,
       [user.deleted_at],
     );
 
-    if (deletionExpired.rows[0].expired) {
+    const expiredResult = deletionExpired.rows[0];
+
+    if (!expiredResult) {
+      throw new Error("Failed to determine whether the account has expired.");
+    }
+
+    if (expiredResult.expired) {
       throw new Error("Account permanently deleted");
     }
 
@@ -174,11 +238,9 @@ const reactivateAccount = async (email, password) => {
     await client.query("COMMIT");
 
     // Issue new JWT
-    const token = jwt.sign(
-      { id: user.id, email: user.email },
-      process.env.JWT_SECRET,
-      { expiresIn: "24h" },
-    );
+    const token = jwt.sign({ id: user.id, email: user.email }, env.jwtSecret, {
+      expiresIn: "24h",
+    });
 
     return {
       message: "Account and owned workspaces reactivated",
@@ -200,8 +262,8 @@ const reactivateAccount = async (email, password) => {
 // Get current user
 // ------------------
 
-const getCurrentUser = async (userId) => {
-  const result = await pool.query(
+const getCurrentUser = async (userId: string): Promise<User> => {
+  const result = await pool.query<User>(
     `
       SELECT id, email
       FROM users
@@ -211,18 +273,22 @@ const getCurrentUser = async (userId) => {
     [userId],
   );
 
-  if (result.rows.length === 0) {
+  const user = result.rows[0];
+
+  if (!user) {
     throw new Error("User not found");
   }
 
-  return result.rows[0];
+  return user;
 };
 
 // ------------------
 // Soft delete current user
 // ------------------
 
-const softDeleteCurrentUser = async (userId) => {
+const softDeleteCurrentUser = async (
+  userId: string,
+): Promise<DeleteResponse> => {
   const client = await pool.connect();
 
   try {
@@ -269,7 +335,7 @@ const softDeleteCurrentUser = async (userId) => {
   }
 };
 
-module.exports = {
+export {
   signup,
   login,
   reactivateAccount,
