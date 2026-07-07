@@ -1,8 +1,8 @@
 import express from "express";
 const router = express.Router();
 
-import { resetDemoController } from "../controllers/demoController.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
+import { resetDemoController } from "../controllers/demoController.js";
 
 // ------------------
 // Reset Demo workspace
