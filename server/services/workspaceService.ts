@@ -1,5 +1,6 @@
 import pool from "../db.js";
 import type { Role } from "../utils/permissions.js";
+import type { MemberRole } from "../utils/permissions.js";
 
 type Workspace = {
   id: string;
@@ -12,7 +13,7 @@ type Workspace = {
 type WorkspaceMember = {
   workspace_id: string;
   user_id: string;
-  role: Role;
+  role: MemberRole;
 };
 
 type CreateWorkspaceInput = {
@@ -165,7 +166,7 @@ const deleteWorkspaceService = async (
 const addMemberService = async (
   workspaceId: string,
   userId: string,
-  role: Role,
+  role: MemberRole,
 ): Promise<WorkspaceMember> => {
   const result = await pool.query<WorkspaceMember>(
     `
