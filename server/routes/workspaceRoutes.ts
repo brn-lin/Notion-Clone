@@ -1,10 +1,10 @@
-const express = require("express");
+import express from "express";
+
+import { authMiddleware } from "../middleware/authMiddleware.js";
+import { workspaceAuth } from "../middleware/workspaceAuth.js";
+import * as workspaceController from "../controllers/workspaceController.js";
+
 const router = express.Router();
-
-const { authMiddleware } = require("../middleware/authMiddleware");
-const { workspaceAuth } = require("../middleware/workspaceAuth");
-
-const workspaceController = require("../controllers/workspaceController");
 
 // ------------------
 // Create a new workspace
@@ -84,4 +84,4 @@ router.delete(
   workspaceController.removeMemberController,
 );
 
-module.exports = router;
+export default router;
