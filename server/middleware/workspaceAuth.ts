@@ -1,13 +1,8 @@
 import pool from "../db.js";
 import type { Request, Response, NextFunction } from "express";
 import { hasRole, type Role } from "../utils/permissions.js";
+import { getUser } from "../utils/getUser.js";
 import type { AuthTokenPayload } from "./authMiddleware.js";
-
-type WorkspaceRequest = Request & {
-  user: AuthTokenPayload;
-  workspaceId?: string;
-  memberRole?: Role;
-};
 
 type WorkspaceMemberRow = {
   id: string;
@@ -15,7 +10,7 @@ type WorkspaceMemberRow = {
 };
 
 export const workspaceAuth = (requiredRole: Role = "viewer") => {
-  return async (req: WorkspaceRequest, res: Response, next: NextFunction) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
     const workspaceId = req.params.workspaceId;
 
     if (!workspaceId) {
@@ -23,6 +18,8 @@ export const workspaceAuth = (requiredRole: Role = "viewer") => {
     }
 
     try {
+      const user = getUser(req);
+
       // Fetch membership directly from DB
       const result = await pool.query<WorkspaceMemberRow>(
         `
@@ -33,7 +30,7 @@ export const workspaceAuth = (requiredRole: Role = "viewer") => {
         WHERE w.id = $1
           AND wm.user_id = $2
         `,
-        [workspaceId, req.user.id],
+        [workspaceId, user.id],
       );
 
       if (result.rows.length === 0) {
@@ -58,8 +55,9 @@ export const workspaceAuth = (requiredRole: Role = "viewer") => {
       req.memberRole = role;
 
       next();
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Workspace auth error:", err);
+
       res.status(500).json({ error: "Authorization failed" });
     }
   };
