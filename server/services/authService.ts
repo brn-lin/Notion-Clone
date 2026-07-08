@@ -250,7 +250,7 @@ const reactivateAccount = async (
         email: user.email,
       },
     };
-  } catch (err) {
+  } catch (err: unknown) {
     await client.query("ROLLBACK");
     throw err;
   } finally {
@@ -327,7 +327,7 @@ const softDeleteCurrentUser = async (
       message: "Account and owned workspaces scheduled for deletion",
       deletion_effective_in_days: 30,
     };
-  } catch (err) {
+  } catch (err: unknown) {
     await client.query("ROLLBACK");
     throw err;
   } finally {
