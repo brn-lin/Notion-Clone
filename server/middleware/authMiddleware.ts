@@ -9,6 +9,17 @@ export type AuthTokenPayload = {
   exp?: number;
 };
 
+// Type guard for JWT payload
+const isAuthTokenPayload = (
+  payload: string | jwt.JwtPayload,
+): payload is AuthTokenPayload => {
+  return (
+    typeof payload !== "string" &&
+    typeof payload.id === "string" &&
+    typeof payload.email === "string"
+  );
+};
+
 // Middleware to protect routes
 export const authMiddleware = async (
   req: Request,
@@ -38,11 +49,16 @@ export const authMiddleware = async (
       throw new Error("JWT_SECRET environment variable is missing.");
     }
 
-    const decoded = jwt.verify(token, jwtSecret) as jwt.JwtPayload &
-      AuthTokenPayload;
+    const decoded = jwt.verify(token, jwtSecret);
+
+    // Verify the payload has the expected shape
+    if (!isAuthTokenPayload(decoded)) {
+      res.status(401).json({ error: "Invalid token payload" });
+      return;
+    }
 
     // Check if user is deleted
-    const userResult = await pool.query(
+    const userResult = await pool.query<{ id: string }>(
       `
       SELECT id
       FROM users
