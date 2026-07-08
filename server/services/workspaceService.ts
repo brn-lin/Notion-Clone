@@ -1,16 +1,43 @@
-const pool = require("../db");
+import pool from "../db.js";
+import type { Role } from "../utils/permissions.js";
+
+type Workspace = {
+  id: string;
+  name: string;
+  owner_id: string;
+  created_at: Date;
+  updated_at: Date;
+};
+
+type WorkspaceMember = {
+  workspace_id: string;
+  user_id: string;
+  role: Role;
+};
+
+type CreateWorkspaceInput = {
+  name: string;
+  ownerId: string;
+};
+
+type DeletedWorkspace = {
+  id: string;
+};
 
 // ------------------
 // Create a new workspace
 // ------------------
 
-const createWorkspaceService = async ({ name, ownerId }) => {
+const createWorkspaceService = async ({
+  name,
+  ownerId,
+}: CreateWorkspaceInput): Promise<Workspace> => {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
 
     // Insert into workspaces table
-    const workspaceResult = await client.query(
+    const workspaceResult = await client.query<Workspace>(
       `
       INSERT INTO workspaces (name, owner_id)
       Values ($1, $2)
@@ -20,6 +47,10 @@ const createWorkspaceService = async ({ name, ownerId }) => {
     );
 
     const workspace = workspaceResult.rows[0];
+
+    if (!workspace) {
+      throw new Error("Failed to create workspace");
+    }
 
     // Add owner as workspace member
     await client.query(
@@ -31,8 +62,9 @@ const createWorkspaceService = async ({ name, ownerId }) => {
     );
 
     await client.query("COMMIT");
+
     return workspace;
-  } catch (err) {
+  } catch (err: unknown) {
     await client.query("ROLLBACK");
     throw err;
   } finally {
@@ -44,8 +76,11 @@ const createWorkspaceService = async ({ name, ownerId }) => {
 // Rename workspace
 // ------------------
 
-const renameWorkspaceService = async (workspaceId, name) => {
-  const result = await pool.query(
+const renameWorkspaceService = async (
+  workspaceId: string,
+  name: string,
+): Promise<Workspace | undefined> => {
+  const result = await pool.query<Workspace>(
     `
     UPDATE workspaces
     SET name = $1
@@ -55,15 +90,17 @@ const renameWorkspaceService = async (workspaceId, name) => {
     [name, workspaceId],
   );
 
-  return result.rows[0]; // undefined if not found
+  return result.rows[0]; // returns undefined if not found
 };
 
 // ------------------
 // Get all workspaces for current user
 // ------------------
 
-const getAllWorkspacesService = async (userId) => {
-  const result = await pool.query(
+const getAllWorkspacesService = async (
+  userId: string,
+): Promise<Workspace[]> => {
+  const result = await pool.query<Workspace>(
     `
     SELECT w.*
     FROM workspaces w
@@ -73,6 +110,7 @@ const getAllWorkspacesService = async (userId) => {
     `,
     [userId],
   );
+
   return result.rows;
 };
 
@@ -80,8 +118,10 @@ const getAllWorkspacesService = async (userId) => {
 // Get a single workspace by ID
 // ------------------
 
-const getWorkspaceService = async (workspaceId) => {
-  const result = await pool.query(
+const getWorkspaceService = async (
+  workspaceId: string,
+): Promise<Workspace | undefined> => {
+  const result = await pool.query<Workspace>(
     `
     SELECT *
     FROM workspaces
@@ -89,15 +129,18 @@ const getWorkspaceService = async (workspaceId) => {
     `,
     [workspaceId],
   );
-  return result.rows[0];
+
+  return result.rows[0]; // returns undefined if not found
 };
 
 // ------------------
 // Hard delete a workspace by ID (And all pages in it)
 // ------------------
 
-const deleteWorkspaceService = async (workspaceId) => {
-  const result = await pool.query(
+const deleteWorkspaceService = async (
+  workspaceId: string,
+): Promise<DeletedWorkspace> => {
+  const result = await pool.query<DeletedWorkspace>(
     `
     DELETE FROM workspaces
     WHERE id = $1
@@ -106,19 +149,25 @@ const deleteWorkspaceService = async (workspaceId) => {
     [workspaceId],
   );
 
-  if (result.rowCount === 0) {
+  const workspace = result.rows[0];
+
+  if (!workspace) {
     throw new Error("Workspace not found");
   }
 
-  return result.rows[0];
+  return workspace;
 };
 
 // ------------------
 // Add a member to workspace
 // ------------------
 
-const addMemberService = async (workspaceId, userId, role) => {
-  const result = await pool.query(
+const addMemberService = async (
+  workspaceId: string,
+  userId: string,
+  role: Role,
+): Promise<WorkspaceMember> => {
+  const result = await pool.query<WorkspaceMember>(
     `
     INSERT INTO workspace_members (workspace_id, user_id, role)
     VALUES ($1, $2, $3)
@@ -126,15 +175,26 @@ const addMemberService = async (workspaceId, userId, role) => {
     `,
     [workspaceId, userId, role],
   );
-  return result.rows[0];
+
+  const member = result.rows[0];
+
+  if (!member) {
+    throw new Error("Failed to add member");
+  }
+
+  return member;
 };
 
 // ------------------
 // Update a member's role
 // ------------------
 
-const updateMemberRoleService = async (workspaceId, userId, role) => {
-  const result = await pool.query(
+const updateMemberRoleService = async (
+  workspaceId: string,
+  userId: string,
+  role: Role,
+): Promise<WorkspaceMember | undefined> => {
+  const result = await pool.query<WorkspaceMember>(
     `
     UPDATE workspace_members
     SET role = $1
@@ -144,14 +204,18 @@ const updateMemberRoleService = async (workspaceId, userId, role) => {
     `,
     [role, workspaceId, userId],
   );
-  return result.rows[0];
+
+  return result.rows[0]; // returns undefined if not found
 };
 
 // ------------------
 // Remove member from workspace
 // ------------------
 
-const removeMemberService = async (workspaceId, userId) => {
+const removeMemberService = async (
+  workspaceId: string,
+  userId: string,
+): Promise<boolean> => {
   const result = await pool.query(
     `
     DELETE FROM workspace_members
@@ -161,10 +225,15 @@ const removeMemberService = async (workspaceId, userId) => {
     `,
     [workspaceId, userId],
   );
+
+  if (result.rowCount === null) {
+    return false;
+  }
+
   return result.rowCount > 0;
 };
 
-module.exports = {
+export {
   createWorkspaceService,
   renameWorkspaceService,
   getAllWorkspacesService,
