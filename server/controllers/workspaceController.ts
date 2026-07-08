@@ -1,28 +1,37 @@
-const validator = require("validator");
-const workspaceService = require("../services/workspaceService");
+import type { Request, Response } from "express";
+import validator from "validator";
+import * as workspaceService from "../services/workspaceService.js";
+import { getUser } from "../utils/getUser.js";
+import { isMemberRole } from "../utils/permissions.js";
 
 // ------------------
 // Create a new workspace
 // ------------------
 
-const createWorkspaceController = async (req, res) => {
+const createWorkspaceController = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const name = String(req.body.name || "").trim();
 
   // If name is empty, respond with 400 Bad Request
   if (!name) {
-    return res.status(400).json({ error: "Workspace name required" });
+    res.status(400).json({ error: "Workspace name required" });
+    return;
   }
 
   try {
+    const user = getUser(req);
     const workspace = await workspaceService.createWorkspaceService({
       name,
-      ownerId: req.user.id,
+      ownerId: user.id,
     });
 
     // Successful response
     res.status(201).json(workspace);
-  } catch (err) {
+  } catch (err: unknown) {
     console.error(err);
+
     res.status(500).json({ error: "Failed to create workspace" });
   }
 };
@@ -31,12 +40,16 @@ const createWorkspaceController = async (req, res) => {
 // Rename workspace (owner-only)
 // ------------------
 
-const renameWorkspaceController = async (req, res) => {
+const renameWorkspaceController = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const name = String(req.body.name || "").trim();
 
   // Validate input
   if (!name) {
-    return res.status(400).json({ error: "Workspace name required" });
+    res.status(400).json({ error: "Workspace name required" });
+    return;
   }
 
   try {
@@ -46,13 +59,15 @@ const renameWorkspaceController = async (req, res) => {
     );
 
     if (!workspace) {
-      return res.status(404).json({ error: "Workspace not found" });
+      res.status(404).json({ error: "Workspace not found" });
+      return;
     }
 
-    return res.status(200).json(workspace);
-  } catch (err) {
+    res.status(200).json(workspace);
+  } catch (err: unknown) {
     console.error("Rename workspace error:", err);
-    return res.status(500).json({ error: "Failed to rename workspace" });
+
+    res.status(500).json({ error: "Failed to rename workspace" });
   }
 };
 
@@ -60,16 +75,20 @@ const renameWorkspaceController = async (req, res) => {
 // Get all workspaces for current user
 // ------------------
 
-const getAllWorkspacesController = async (req, res) => {
+const getAllWorkspacesController = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
-    const workspaces = await workspaceService.getAllWorkspacesService(
-      req.user.id,
-    );
+    const user = getUser(req);
+
+    const workspaces = await workspaceService.getAllWorkspacesService(user.id);
 
     // Successful response
     res.json(workspaces);
-  } catch (err) {
+  } catch (err: unknown) {
     console.error(err);
+
     res.status(500).json({ error: "Failed to get workspaces" });
   }
 };
@@ -78,24 +97,28 @@ const getAllWorkspacesController = async (req, res) => {
 // Get a single workspace by ID
 // ------------------
 
-const getWorkspaceController = async (req, res) => {
+const getWorkspaceController = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
     const workspace = await workspaceService.getWorkspaceService(
       req.workspaceId,
     );
 
     if (!workspace) {
-      return res.status(404).json({
+      res.status(404).json({
         error: "Workspace not found",
       });
+      return;
     }
 
     // Successful response
-    return res.status(200).json(workspace);
-  } catch (err) {
+    res.status(200).json(workspace);
+  } catch (err: unknown) {
     console.error("Get workspace error:", err);
 
-    return res.status(500).json({
+    res.status(500).json({
       error: "Failed to get workspace",
     });
   }
@@ -105,27 +128,31 @@ const getWorkspaceController = async (req, res) => {
 // Hard delete a workspace (owner-only)
 // ------------------
 
-const deleteWorkspaceController = async (req, res) => {
+const deleteWorkspaceController = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
     const result = await workspaceService.deleteWorkspaceService(
       req.workspaceId,
     );
 
     // Successful response
-    return res.status(200).json({
+    res.status(200).json({
       message: "Workspace successfully deleted",
       id: result.id,
     });
-  } catch (err) {
-    if (err.message === "Workspace not found") {
-      return res.status(404).json({
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message === "Workspace not found") {
+      res.status(404).json({
         error: "Workspace not found",
       });
+      return;
     }
 
     console.error("Delete workspace error:", err);
 
-    return res.status(500).json({
+    res.status(500).json({
       error: "Failed to delete workspace",
     });
   }
@@ -135,18 +162,24 @@ const deleteWorkspaceController = async (req, res) => {
 // Invite a member to workspace (owner-only)
 // ------------------
 
-const addMemberController = async (req, res) => {
+const addMemberController = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const { userId, role = "member" } = req.body;
+
   const roleNormalized = String(role || "").trim();
 
   // Validate user ID
   if (!validator.isUUID(userId)) {
-    return res.status(400).json({ error: "Invalid user ID" });
+    res.status(400).json({ error: "Invalid user ID" });
+    return;
   }
 
   // Validate role
-  if (!["member", "viewer"].includes(roleNormalized)) {
-    return res.status(400).json({ error: "Invalid role" });
+  if (!isMemberRole(roleNormalized)) {
+    res.status(400).json({ error: "Invalid role" });
+    return;
   }
 
   try {
@@ -158,12 +191,19 @@ const addMemberController = async (req, res) => {
 
     // Successful response
     res.status(201).json(members);
-  } catch (err) {
-    if (err.code === "23505") {
-      return res.status(400).json({ error: "User already a member" });
+  } catch (err: unknown) {
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "code" in err &&
+      err.code === "23505"
+    ) {
+      res.status(400).json({ error: "User already a member" });
+      return;
     }
 
     console.error(err);
+
     res.status(500).json({ error: "Failed to add member" });
   }
 };
@@ -172,19 +212,29 @@ const addMemberController = async (req, res) => {
 // Change member role (owner-only)
 // ------------------
 
-const updateMemberRoleController = async (req, res) => {
+const updateMemberRoleController = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const targetUserId = req.params.userId;
   const { role } = req.body;
   const roleNormalized = String(role || "").trim();
 
+  if (typeof targetUserId !== "string") {
+    res.status(400).json({ error: "Invalid user ID" });
+    return;
+  }
+
   // Validate user ID
   if (!validator.isUUID(targetUserId)) {
-    return res.status(400).json({ error: "Invalid user ID" });
+    res.status(400).json({ error: "Invalid user ID" });
+    return;
   }
 
   // Validate role
-  if (!["member", "viewer"].includes(roleNormalized)) {
-    return res.status(400).json({ error: "Invalid role" });
+  if (!isMemberRole(roleNormalized)) {
+    res.status(400).json({ error: "Invalid role" });
+    return;
   }
 
   try {
@@ -195,13 +245,15 @@ const updateMemberRoleController = async (req, res) => {
     );
 
     if (!member) {
-      return res.status(404).json({ error: "Member not found" });
+      res.status(404).json({ error: "Member not found" });
+      return;
     }
 
     // Successful response
     res.json(member);
-  } catch (err) {
+  } catch (err: unknown) {
     console.error(err);
+
     res.status(500).json({ error: "Failed to update member role" });
   }
 };
@@ -210,12 +262,21 @@ const updateMemberRoleController = async (req, res) => {
 // Remove member (owner only)
 // ------------------
 
-const removeMemberController = async (req, res) => {
+const removeMemberController = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const targetUserId = req.params.userId;
+
+  if (typeof targetUserId !== "string") {
+    res.status(400).json({ error: "Invalid user ID" });
+    return;
+  }
 
   // Validate user ID
   if (!validator.isUUID(targetUserId)) {
-    return res.status(400).json({ error: "Invalid user ID" });
+    res.status(400).json({ error: "Invalid user ID" });
+    return;
   }
 
   try {
@@ -225,18 +286,20 @@ const removeMemberController = async (req, res) => {
     );
 
     if (!removed) {
-      return res.status(404).json({ error: "Member not found" });
+      res.status(404).json({ error: "Member not found" });
+      return;
     }
 
     // Successful response
     res.status(200).json({ message: "Member successfully removed" });
-  } catch (err) {
+  } catch (err: unknown) {
     console.error(err);
+
     res.status(500).json({ error: "Failed to remove member" });
   }
 };
 
-module.exports = {
+export {
   createWorkspaceController,
   renameWorkspaceController,
   getAllWorkspacesController,
