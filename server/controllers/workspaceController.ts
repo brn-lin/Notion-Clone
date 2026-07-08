@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import validator from "validator";
 import * as workspaceService from "../services/workspaceService.js";
 import { getUser } from "../utils/getUser.js";
+import { getWorkspaceId } from "../utils/getWorkspaceId.js";
 import { isMemberRole } from "../utils/permissions.js";
 
 // ------------------
@@ -53,8 +54,10 @@ const renameWorkspaceController = async (
   }
 
   try {
+    const workspaceId = getWorkspaceId(req);
+
     const workspace = await workspaceService.renameWorkspaceService(
-      req.workspaceId,
+      workspaceId,
       name,
     );
 
@@ -102,9 +105,9 @@ const getWorkspaceController = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const workspace = await workspaceService.getWorkspaceService(
-      req.workspaceId,
-    );
+    const workspaceId = getWorkspaceId(req);
+
+    const workspace = await workspaceService.getWorkspaceService(workspaceId);
 
     if (!workspace) {
       res.status(404).json({
@@ -133,9 +136,9 @@ const deleteWorkspaceController = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const result = await workspaceService.deleteWorkspaceService(
-      req.workspaceId,
-    );
+    const workspaceId = getWorkspaceId(req);
+
+    const result = await workspaceService.deleteWorkspaceService(workspaceId);
 
     // Successful response
     res.status(200).json({
@@ -183,8 +186,10 @@ const addMemberController = async (
   }
 
   try {
+    const workspaceId = getWorkspaceId(req);
+
     const members = await workspaceService.addMemberService(
-      req.workspaceId,
+      workspaceId,
       userId,
       roleNormalized,
     );
@@ -238,8 +243,10 @@ const updateMemberRoleController = async (
   }
 
   try {
+    const workspaceId = getWorkspaceId(req);
+
     const member = await workspaceService.updateMemberRoleService(
-      req.workspaceId,
+      workspaceId,
       targetUserId,
       roleNormalized,
     );
@@ -280,8 +287,10 @@ const removeMemberController = async (
   }
 
   try {
+    const workspaceId = getWorkspaceId(req);
+
     const removed = await workspaceService.removeMemberService(
-      req.workspaceId,
+      workspaceId,
       targetUserId,
     );
 
