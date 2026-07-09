@@ -1,4 +1,163 @@
-const pool = require("../db");
+import pool from "../db.js";
+
+// ------------------
+// General Types
+// ------------------
+
+type ItemType = "page" | "block";
+
+type ItemContent = Record<string, unknown>;
+
+type Item = {
+  id: string;
+  workspace_id: string;
+  parent_id: string | null;
+  type: ItemType;
+  title: string | null;
+  content: ItemContent;
+  position: number;
+  created_by: string | null;
+  updated_by: string | null;
+  trashed_by_id: string | null;
+  created_at: Date;
+  updated_at: Date;
+  deleted_at: Date | null;
+};
+
+// ------------------
+// Parameter Types
+// ------------------
+
+type CreateItemParams = {
+  workspaceId: string;
+  parentId?: string | null;
+  type: ItemType;
+  title?: string | null;
+  content?: ItemContent | string;
+  afterItemId?: string | null;
+  createdBy?: string | null;
+};
+
+type GetItemsInWorkspaceParams = {
+  workspaceId: string;
+};
+
+type GetItemInParentParams = {
+  workspaceId: string;
+  parentId: string;
+};
+
+type UpdateItemParams = {
+  workspaceId: string;
+  itemId: string;
+  title?: string | null;
+  content?: ItemContent;
+};
+
+type MoveItemParams = {
+  workspaceId: string;
+  itemId: string;
+  newParentId?: string | null;
+  newIndex?: number;
+};
+
+type SoftDeleteItemParams = {
+  workspaceId: string;
+  itemId: string;
+  userId: string;
+};
+
+type GetTrashItemsParams = {
+  workspaceId: string;
+  userId: string;
+};
+
+type RestoreItemParams = {
+  workspaceId: string;
+  itemId: string;
+};
+
+type PermanentlyDeleteItemParams = {
+  workspaceId: string;
+  itemId: string;
+};
+
+type EmptyTrashParams = {
+  workspaceId: string;
+  userId: string;
+};
+
+// ------------------
+// Function Return Types
+// ------------------
+
+type GetItemsInWorkspaceReturn = Pick<
+  Item,
+  "id" | "type" | "title" | "content" | "parent_id" | "position"
+>[];
+
+type GetItemInParentReturn = Pick<
+  Item,
+  | "id"
+  | "workspace_id"
+  | "parent_id"
+  | "type"
+  | "title"
+  | "content"
+  | "position"
+>[];
+
+type SoftDeleteItemReturn = {
+  deletedIds: string[];
+  count: number;
+};
+
+type GetTrashItemsReturn = Pick<
+  Item,
+  "id" | "parent_id" | "title" | "deleted_at" | "created_at" | "trashed_by_id"
+>[];
+
+type RestoreItemReturn = {
+  restoredIds: string[];
+  count: number;
+};
+
+type PermanentlyDeleteItemsReturn = {
+  deletedIds: string[];
+  count: number;
+};
+
+// ------------------
+// Query Result Types
+// ------------------
+
+type ParentRow = Pick<Item, "id" | "type" | "workspace_id">;
+
+type AfterItemRow = Pick<Item, "id" | "position" | "parent_id">;
+
+type PositionRow = Pick<Item, "position">;
+
+type MaxPositionRow = {
+  max_position: number;
+};
+
+type ItemIdRow = Pick<Item, "id">;
+
+type ItemTypeRow = Pick<Item, "id" | "type">;
+
+type ItemMoveRow = Pick<Item, "id" | "type" | "parent_id">;
+
+type ParentTypeRow = Pick<Item, "id" | "type">;
+
+type SiblingRow = Pick<Item, "id" | "position">;
+
+type RootItemRow = Pick<Item, "id" | "parent_id" | "deleted_at">;
+
+type RestoreEligibilityRow = {
+  eligible: boolean;
+};
+
+type RestoreTreeRow = Pick<Item, "id" | "parent_id">;
 
 // ------------------
 // Create an item
@@ -10,10 +169,9 @@ const createItemService = async ({
   type,
   title,
   content,
-  position = null,
   afterItemId = null,
   createdBy = null,
-}) => {
+}: CreateItemParams): Promise<Item> => {
   // Validate type
   if (!["page", "block"].includes(type)) {
     throw new Error("Invalid type");
@@ -30,10 +188,10 @@ const createItemService = async ({
     await client.query("BEGIN");
 
     // Verify parent exists
-    let parent = null;
+    let parent: ParentRow | null = null;
 
     if (parentId) {
-      const parentResult = await client.query(
+      const parentResult = await client.query<ParentRow>(
         `
         SELECT id, type, workspace_id
         FROM items
@@ -48,7 +206,7 @@ const createItemService = async ({
         throw new Error("Parent not found");
       }
 
-      parent = parentResult.rows[0];
+      parent = parentResult.rows[0]!;
 
       // A block cannot be the parent of a page
       if (type === "page" && parent.type === "block") {
@@ -75,11 +233,11 @@ const createItemService = async ({
     }
 
     // Final position
-    let finalPosition;
+    let finalPosition: number;
 
     // Case 1: Insert after current item
     if (afterItemId) {
-      const afterResult = await client.query(
+      const afterResult = await client.query<AfterItemRow>(
         `
         SELECT id, position, parent_id
         FROM items
@@ -90,18 +248,18 @@ const createItemService = async ({
         [afterItemId, workspaceId],
       );
 
-      if (afterResult.rows.length === 0) {
+      const afterItem = afterResult.rows[0];
+
+      if (!afterItem) {
         throw new Error("After item not found");
       }
-
-      const afterItem = afterResult.rows[0];
 
       // Ensure after item belongs to same parent
       if (afterItem.parent_id !== parentId) {
         throw new Error("Cannot insert after item in different parent");
       }
 
-      const nextResult = await client.query(
+      const nextResult = await client.query<PositionRow>(
         `
         SELECT position
         FROM items
@@ -127,7 +285,7 @@ const createItemService = async ({
 
       // Case 2: Default append to end
     } else {
-      const maxResult = await client.query(
+      const maxResult = await client.query<MaxPositionRow>(
         `
         SELECT COALESCE(MAX(position), 0) AS max_position
         FROM items
@@ -138,11 +296,17 @@ const createItemService = async ({
         [parentId, workspaceId],
       );
 
-      finalPosition = maxResult.rows[0].max_position + 1000;
+      const maxPositionRow = maxResult.rows[0];
+
+      if (!maxPositionRow) {
+        throw new Error("Failed to calculate max position");
+      }
+
+      finalPosition = maxPositionRow.max_position + 1000;
     }
 
     // Insert into DB
-    const result = await client.query(
+    const result = await client.query<Item>(
       `
       INSERT INTO items (
         workspace_id,
@@ -160,6 +324,10 @@ const createItemService = async ({
     );
 
     const newItem = result.rows[0];
+
+    if (!newItem) {
+      throw new Error("Failed to create item");
+    }
 
     // If creating a new page, automtically create an empty block inside it
     if (type === "page") {
@@ -183,7 +351,7 @@ const createItemService = async ({
     await client.query("COMMIT");
 
     return newItem;
-  } catch (err) {
+  } catch (err: unknown) {
     await client.query("ROLLBACK");
     throw err;
   } finally {
@@ -195,7 +363,9 @@ const createItemService = async ({
 // Get all items in a workspace (root level)
 // ------------------
 
-const getItemsInWorkspaceService = async ({ workspaceId }) => {
+const getItemsInWorkspaceService = async ({
+  workspaceId,
+}: GetItemsInWorkspaceParams): Promise<GetItemsInWorkspaceReturn> => {
   const client = await pool.connect();
 
   try {
@@ -221,12 +391,15 @@ const getItemsInWorkspaceService = async ({ workspaceId }) => {
 // Get all items in a parent container
 // ------------------
 
-const getItemInParentService = async ({ workspaceId, parentId }) => {
+const getItemInParentService = async ({
+  workspaceId,
+  parentId,
+}: GetItemInParentParams): Promise<GetItemInParentReturn> => {
   const client = await pool.connect();
 
   try {
     // Verify parent exists
-    const parentResult = await client.query(
+    const parentResult = await client.query<ItemIdRow>(
       `
       SELECT id
       FROM items
@@ -270,14 +443,19 @@ const getItemInParentService = async ({ workspaceId, parentId }) => {
 // Update page title & block content
 // ------------------
 
-const updateItemService = async ({ workspaceId, itemId, title, content }) => {
+const updateItemService = async ({
+  workspaceId,
+  itemId,
+  title,
+  content,
+}: UpdateItemParams): Promise<Item> => {
   const client = await pool.connect();
 
   try {
     await client.query("BEGIN");
 
     // Get item + type
-    const result = await client.query(
+    const result = await client.query<ItemTypeRow>(
       `
       SELECT id, type
       FROM items
@@ -288,14 +466,14 @@ const updateItemService = async ({ workspaceId, itemId, title, content }) => {
       [itemId, workspaceId],
     );
 
-    if (result.rows.length === 0) {
+    const item = result.rows[0];
+
+    if (!item) {
       throw new Error("Item not found");
     }
 
-    const item = result.rows[0];
-
-    const fields = [];
-    const values = [];
+    const fields: string[] = [];
+    const values: unknown[] = [];
     let idx = 1;
 
     // Pages can only have titles
@@ -328,7 +506,26 @@ const updateItemService = async ({ workspaceId, itemId, title, content }) => {
 
     // Nothing to update
     if (fields.length === 0) {
-      return result.rows[0];
+      const existingResult = await client.query<Item>(
+        `
+        SELECT *
+        FROM items
+        WHERE id = $1
+          AND workspace_id = $2
+          AND deleted_at IS NULL
+        `,
+        [itemId, workspaceId],
+      );
+
+      const existingItem = existingResult.rows[0];
+
+      if (!existingItem) {
+        throw new Error("Item not found");
+      }
+
+      await client.query("COMMIT");
+
+      return existingItem;
     }
 
     fields.push(`updated_at = NOW()`);
@@ -342,12 +539,18 @@ const updateItemService = async ({ workspaceId, itemId, title, content }) => {
 
     values.push(itemId);
 
-    const updated = await client.query(query, values);
+    const updated = await client.query<Item>(query, values);
+
+    const updatedItem = updated.rows[0];
+
+    if (!updatedItem) {
+      throw new Error("Failed to update item");
+    }
 
     await client.query("COMMIT");
 
-    return updated.rows[0];
-  } catch (err) {
+    return updatedItem;
+  } catch (err: unknown) {
     await client.query("ROLLBACK");
     throw err;
   } finally {
@@ -364,13 +567,13 @@ const moveItemService = async ({
   itemId,
   newParentId = null,
   newIndex,
-}) => {
+}: MoveItemParams): Promise<Item> => {
   const client = await pool.connect();
 
   try {
     await client.query("BEGIN");
 
-    const itemResult = await client.query(
+    const itemResult = await client.query<ItemMoveRow>(
       `
       SELECT id, type, parent_id
       FROM items
@@ -382,17 +585,15 @@ const moveItemService = async ({
       [itemId, workspaceId],
     );
 
-    if (itemResult.rows.length === 0) {
+    const item = itemResult.rows[0];
+
+    if (!item) {
       throw new Error("Item not found");
     }
 
-    const item = itemResult.rows[0];
-
     // Get new parent (if it exists)
-    let parent = null;
-
-    if (newParentId) {
-      const parentResult = await client.query(
+    if (newParentId !== null) {
+      const parentResult = await client.query<ParentTypeRow>(
         `
         SELECT id, type
         FROM items
@@ -403,11 +604,11 @@ const moveItemService = async ({
         [newParentId, workspaceId],
       );
 
-      if (parentResult.rows.length === 0) {
+      const parent = parentResult.rows[0];
+
+      if (!parent) {
         throw new Error("Parent not found");
       }
-
-      parent = parentResult.rows[0];
 
       // A block cannot be the parent of a page
       if (item.type === "page" && parent.type === "block") {
@@ -452,7 +653,7 @@ const moveItemService = async ({
     }
 
     // Fetch all siblings under the new parent
-    const siblingsResult = await client.query(
+    const siblingsResult = await client.query<SiblingRow>(
       `
       SELECT id, position
       FROM items
@@ -469,19 +670,29 @@ const moveItemService = async ({
     const siblings = siblingsResult.rows;
 
     // Compute new position using fractional indexing
-    let newPosition;
-    let indexClamped = newIndex;
+    let newPosition: number;
+    let indexClamped = newIndex ?? siblings.length;
 
     if (newIndex === undefined || newIndex >= siblings.length) {
-      newPosition =
-        siblings.length > 0
-          ? siblings[siblings.length - 1].position + 1000
-          : 1000;
+      const lastSibling = siblings[siblings.length - 1];
+
+      newPosition = lastSibling ? lastSibling.position + 1000 : 1000;
     } else if (newIndex <= 0) {
-      newPosition = siblings[0].position / 2;
+      const firstSibling = siblings[0];
+
+      if (!firstSibling) {
+        throw new Error("Cannot calculate position without siblings");
+      }
+
+      newPosition = firstSibling.position / 2;
     } else {
       const prev = siblings[newIndex - 1];
       const next = siblings[newIndex];
+
+      if (!prev || !next) {
+        throw new Error("Invalid index");
+      }
+
       newPosition = (prev.position + next.position) / 2;
     }
 
@@ -511,7 +722,7 @@ const moveItemService = async ({
         );
 
         // Re-fetch siblings after normalization
-        const refreshed = await client.query(
+        const refreshed = await client.query<SiblingRow>(
           `
           SELECT id, position
           FROM items
@@ -536,18 +747,20 @@ const moveItemService = async ({
 
         if (!beforeR && !afterR) {
           newPosition = 1000;
-        } else if (!beforeR) {
+        } else if (!beforeR && afterR) {
           newPosition = afterR.position / 2;
-        } else if (!afterR) {
+        } else if (beforeR && !afterR) {
           newPosition = beforeR.position + 1000;
-        } else {
+        } else if (beforeR && afterR) {
           newPosition = (beforeR.position + afterR.position) / 2;
+        } else {
+          throw new Error("Unexpected sibling state");
         }
       }
     }
 
     // Update the item
-    const updateResult = await client.query(
+    const updateResult = await client.query<Item>(
       `
       UPDATE items
       SET parent_id = $1,
@@ -559,10 +772,16 @@ const moveItemService = async ({
       [newParentId, newPosition, itemId],
     );
 
+    const updatedItem = updateResult.rows[0];
+
+    if (!updatedItem) {
+      throw new Error("Failed to move item");
+    }
+
     await client.query("COMMIT");
 
-    return updateResult.rows[0];
-  } catch (err) {
+    return updatedItem;
+  } catch (err: unknown) {
     await client.query("ROLLBACK");
     throw err;
   } finally {
@@ -574,7 +793,11 @@ const moveItemService = async ({
 // Soft delete an item
 // ------------------
 
-const softDeleteItemService = async ({ workspaceId, itemId, userId }) => {
+const softDeleteItemService = async ({
+  workspaceId,
+  itemId,
+  userId,
+}: SoftDeleteItemParams): Promise<SoftDeleteItemReturn> => {
   const client = await pool.connect();
 
   try {
@@ -597,7 +820,7 @@ const softDeleteItemService = async ({ workspaceId, itemId, userId }) => {
     }
 
     // Build recursive tree for soft delete
-    const deleteResult = await client.query(
+    const deleteResult = await client.query<ItemIdRow>(
       `
       WITH RECURSIVE item_tree AS (
         SELECT id
@@ -632,9 +855,9 @@ const softDeleteItemService = async ({ workspaceId, itemId, userId }) => {
 
     return {
       deletedIds: deleteResult.rows.map((r) => r.id),
-      count: deleteResult.rowCount,
+      count: deleteResult.rowCount ?? 0,
     };
-  } catch (err) {
+  } catch (err: unknown) {
     await client.query("ROLLBACK");
     throw err;
   } finally {
@@ -646,7 +869,10 @@ const softDeleteItemService = async ({ workspaceId, itemId, userId }) => {
 // Get trash items (pages only)
 // ------------------
 
-const getTrashItemsService = async ({ workspaceId, userId }) => {
+const getTrashItemsService = async ({
+  workspaceId,
+  userId,
+}: GetTrashItemsParams): Promise<GetTrashItemsReturn> => {
   const result = await pool.query(
     `
     SELECT id,
@@ -672,14 +898,17 @@ const getTrashItemsService = async ({ workspaceId, userId }) => {
 // Restore a soft deleted item and all descendants (Within 30 day window)
 // ------------------
 
-const restoreItemService = async ({ workspaceId, itemId }) => {
+const restoreItemService = async ({
+  workspaceId,
+  itemId,
+}: RestoreItemParams): Promise<RestoreItemReturn> => {
   const client = await pool.connect();
 
   try {
     await client.query("BEGIN");
 
     // Verify root item exists
-    const rootResult = await client.query(
+    const rootResult = await client.query<RootItemRow>(
       `
       SELECT id, parent_id, deleted_at
       FROM items
@@ -695,12 +924,16 @@ const restoreItemService = async ({ workspaceId, itemId }) => {
 
     const rootItem = rootResult.rows[0];
 
+    if (!rootItem) {
+      throw new Error("Item not found");
+    }
+
     if (!rootItem.deleted_at) {
       throw new Error("Item is not deleted");
     }
 
     // Check restore window (30 days)
-    const windowCheck = await client.query(
+    const windowCheck = await client.query<RestoreEligibilityRow>(
       `
       SELECT deleted_at > NOW() - INTERVAL '30 days' AS eligible
       FROM items
@@ -709,12 +942,18 @@ const restoreItemService = async ({ workspaceId, itemId }) => {
       [itemId],
     );
 
-    if (!windowCheck.rows[0].eligible) {
+    const eligibility = windowCheck.rows[0];
+
+    if (!eligibility) {
+      throw new Error("Failed to determine restore eligibility");
+    }
+
+    if (!eligibility.eligible) {
       throw new Error("Restore window expired");
     }
 
     // Build recursive tree for restore
-    const treeResult = await client.query(
+    const treeResult = await client.query<RestoreTreeRow>(
       `
       WITH RECURSIVE item_tree AS (
         SELECT id, parent_id, deleted_at, 0 AS depth
@@ -746,7 +985,7 @@ const restoreItemService = async ({ workspaceId, itemId }) => {
       throw new Error("Restore window expired");
     }
 
-    const restoredIds = [];
+    const restoredIds: string[] = [];
 
     // Restore each item one-by-one
     for (const item of itemsToRestore) {
@@ -776,11 +1015,20 @@ const restoreItemService = async ({ workspaceId, itemId }) => {
         values = [workspaceId, item.parent_id];
       }
 
-      const maxResult = await client.query(maxPositionQuery, values);
+      const maxResult = await client.query<MaxPositionRow>(
+        maxPositionQuery,
+        values,
+      );
 
-      const newPosition = maxResult.rows[0].max_position + 1000;
+      const maxPositionRow = maxResult.rows[0];
 
-      const updateResult = await client.query(
+      if (!maxPositionRow) {
+        throw new Error("Failed to calculate max position");
+      }
+
+      const newPosition = maxPositionRow.max_position + 1000;
+
+      const updateResult = await client.query<ItemIdRow>(
         `
         UPDATE items
         SET deleted_at = NULL,
@@ -792,7 +1040,13 @@ const restoreItemService = async ({ workspaceId, itemId }) => {
         [newPosition, item.id],
       );
 
-      restoredIds.push(updateResult.rows[0].id);
+      const updatedItem = updateResult.rows[0];
+
+      if (!updatedItem) {
+        throw new Error("Failed to restore item");
+      }
+
+      restoredIds.push(updatedItem.id);
     }
 
     await client.query("COMMIT");
@@ -801,7 +1055,7 @@ const restoreItemService = async ({ workspaceId, itemId }) => {
       restoredIds,
       count: restoredIds.length,
     };
-  } catch (err) {
+  } catch (err: unknown) {
     await client.query("ROLLBACK");
     throw err;
   } finally {
@@ -813,7 +1067,10 @@ const restoreItemService = async ({ workspaceId, itemId }) => {
 // Permanently delete an item and all descendants
 // ------------------
 
-const permanentlyDeleteItemService = async ({ workspaceId, itemId }) => {
+const permanentlyDeleteItemService = async ({
+  workspaceId,
+  itemId,
+}: PermanentlyDeleteItemParams): Promise<PermanentlyDeleteItemsReturn> => {
   const client = await pool.connect();
 
   try {
@@ -836,7 +1093,7 @@ const permanentlyDeleteItemService = async ({ workspaceId, itemId }) => {
     }
 
     // Build recursive tree for permanently deleting an item
-    const deleteResult = await client.query(
+    const deleteResult = await client.query<ItemIdRow>(
       `
       WITH RECURSIVE item_tree AS (
         SELECT id
@@ -864,9 +1121,9 @@ const permanentlyDeleteItemService = async ({ workspaceId, itemId }) => {
 
     return {
       deletedIds: deleteResult.rows.map((r) => r.id),
-      count: deleteResult.rowCount,
+      count: deleteResult.rowCount ?? 0,
     };
-  } catch (err) {
+  } catch (err: unknown) {
     await client.query("ROLLBACK");
     throw err;
   } finally {
@@ -878,13 +1135,16 @@ const permanentlyDeleteItemService = async ({ workspaceId, itemId }) => {
 // Permanently delete all trash items
 // ------------------
 
-const emptyTrashService = async ({ workspaceId, userId }) => {
+const emptyTrashService = async ({
+  workspaceId,
+  userId,
+}: EmptyTrashParams): Promise<PermanentlyDeleteItemsReturn> => {
   const client = await pool.connect();
 
   try {
     await client.query("BEGIN");
 
-    const deleteResult = await client.query(
+    const deleteResult = await client.query<ItemIdRow>(
       `
       DELETE FROM items
       WHERE workspace_id = $1
@@ -900,9 +1160,9 @@ const emptyTrashService = async ({ workspaceId, userId }) => {
 
     return {
       deletedIds: deleteResult.rows.map((r) => r.id),
-      count: deleteResult.rowCount,
+      count: deleteResult.rowCount ?? 0,
     };
-  } catch (err) {
+  } catch (err: unknown) {
     await client.query("ROLLBACK");
     throw err;
   } finally {
@@ -910,7 +1170,7 @@ const emptyTrashService = async ({ workspaceId, userId }) => {
   }
 };
 
-module.exports = {
+export {
   createItemService,
   getItemsInWorkspaceService,
   getItemInParentService,
