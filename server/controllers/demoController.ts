@@ -6,7 +6,7 @@ import { getUser } from "../utils/getUser.js";
 // Reset Demo workspace
 // ------------------
 
-export const resetDemoController = async (
+const resetDemoController = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
@@ -29,3 +29,5 @@ export const resetDemoController = async (
     res.status(500).json({ error: "Failed to reset demo workspace" });
   }
 };
+
+export default resetDemoController;
