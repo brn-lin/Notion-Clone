@@ -10,3 +10,5 @@ const router = express.Router();
 // ------------------
 
 router.post("/reset", authMiddleware, resetDemoController);
+
+export default router;
