@@ -113,6 +113,7 @@ const getWorkspaceController = async (
       res.status(404).json({
         error: "Workspace not found",
       });
+
       return;
     }
 
@@ -150,6 +151,7 @@ const deleteWorkspaceController = async (
       res.status(404).json({
         error: "Workspace not found",
       });
+
       return;
     }
 
