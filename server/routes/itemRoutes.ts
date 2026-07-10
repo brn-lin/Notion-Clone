@@ -1,10 +1,10 @@
-const express = require("express");
+import express from "express";
+
+import { authMiddleware } from "../middleware/authMiddleware.js";
+import { workspaceAuth } from "../middleware/workspaceAuth.js";
+import * as itemController from "../controllers/itemController.js";
+
 const router = express.Router();
-
-const { authMiddleware } = require("../middleware/authMiddleware");
-const { workspaceAuth } = require("../middleware/workspaceAuth");
-
-const itemController = require("../controllers/itemController");
 
 // ------------------
 // Create an item
@@ -116,4 +116,4 @@ router.delete(
   itemController.emptyTrashController,
 );
 
-module.exports = router;
+export default router;
