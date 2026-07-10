@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 
 import pool from "../db.js";
 import env from "../config/env.js";
-import { resetDemoWorkspace } from "./demoService.js";
+import resetDemoWorkspace from "./demoService.js";
 
 type User = {
   id: string;
