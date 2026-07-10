@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { resetDemoWorkspace } from "../services/demoService.js";
+import resetDemoWorkspace from "../services/demoService.js";
 import { getUser } from "../utils/getUser.js";
 
 // ------------------
