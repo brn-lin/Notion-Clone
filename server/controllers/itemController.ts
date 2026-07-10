@@ -1,19 +1,36 @@
-const itemService = require("../services/itemService");
+import type { Request, Response } from "express";
+import * as itemService from "../services/itemService.js";
+import { getUser } from "../utils/getUser.js";
+import { getWorkspaceId } from "../utils/getWorkspaceId.js";
+
+// ------------------
+// Route Parameter Types
+// ------------------
+
+type ItemIdParams = {
+  itemId: string;
+};
+
+type ParentIdParams = {
+  parentId: string;
+};
 
 // ------------------
 // Create an item
 // ------------------
 
-const createItemController = async (req, res) => {
-  const workspaceId = req.workspaceId;
-  const userId = req.user.id;
+const createItemController = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  const workspaceId = getWorkspaceId(req);
+  const user = getUser(req);
 
   const {
     type, // "page" or "block"
     parentId = null,
     title,
     content,
-    position,
     afterItemId,
   } = req.body;
 
@@ -24,14 +41,21 @@ const createItemController = async (req, res) => {
       type,
       title,
       content,
-      position,
       afterItemId,
-      createdBy: userId,
+      createdBy: user.id,
     });
 
-    return res.status(201).json(newItem);
-  } catch (err) {
+    res.status(201).json(newItem);
+  } catch (err: unknown) {
     console.error("Error creating item:", err);
+
+    if (!(err instanceof Error)) {
+      res.status(500).json({
+        error: "Failed to create item",
+      });
+
+      return;
+    }
 
     const errorMap = {
       // Parent / hierarchy
@@ -45,11 +69,14 @@ const createItemController = async (req, res) => {
       // afterItemId insertion errors
       "After item not found": 404,
       "Cannot insert after item in different parent": 400,
-    };
+    } as const;
 
-    const status = errorMap[err.message] || 500;
+    const status =
+      err.message in errorMap
+        ? errorMap[err.message as keyof typeof errorMap]
+        : 500;
 
-    return res.status(status).json({
+    res.status(status).json({
       error: status === 500 ? "Failed to create item" : err.message,
     });
   }
@@ -59,19 +86,22 @@ const createItemController = async (req, res) => {
 // Get all items in a workspace (root level)
 // ------------------
 
-const getItemsInWorkspaceController = async (req, res) => {
-  const workspaceId = req.workspaceId;
+const getItemsInWorkspaceController = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  const workspaceId = getWorkspaceId(req);
 
   try {
     const items = await itemService.getItemsInWorkspaceService({
       workspaceId,
     });
 
-    return res.status(200).json(items);
-  } catch (err) {
+    res.status(200).json(items);
+  } catch (err: unknown) {
     console.error("Error fetching root items for workspace:", err);
 
-    return res.status(500).json({ error: "Failed to fetch items" });
+    res.status(500).json({ error: "Failed to fetch items" });
   }
 };
 
@@ -79,8 +109,11 @@ const getItemsInWorkspaceController = async (req, res) => {
 // Get all items in a parent container
 // ------------------
 
-const getItemInParentController = async (req, res) => {
-  const workspaceId = req.workspaceId;
+const getItemInParentController = async (
+  req: Request<ParentIdParams>,
+  res: Response,
+): Promise<void> => {
+  const workspaceId = getWorkspaceId(req);
   const { parentId } = req.params;
 
   try {
@@ -89,15 +122,16 @@ const getItemInParentController = async (req, res) => {
       parentId,
     });
 
-    return res.status(200).json(items);
-  } catch (err) {
+    res.status(200).json(items);
+  } catch (err: unknown) {
     console.error("Error fetching children:", err);
 
-    if (err.message === "Parent not found") {
-      return res.status(404).json({ error: err.message });
+    if (err instanceof Error && err.message === "Parent not found") {
+      res.status(404).json({ error: err.message });
+      return;
     }
 
-    return res.status(500).json({ error: "Failed to fetch items" });
+    res.status(500).json({ error: "Failed to fetch items" });
   }
 };
 
@@ -105,8 +139,11 @@ const getItemInParentController = async (req, res) => {
 // Update page title & block content
 // ------------------
 
-const updateItemController = async (req, res) => {
-  const workspaceId = req.workspaceId;
+const updateItemController = async (
+  req: Request<ItemIdParams>,
+  res: Response,
+): Promise<void> => {
+  const workspaceId = getWorkspaceId(req);
   const { itemId } = req.params;
   const { title, content } = req.body;
 
@@ -114,9 +151,11 @@ const updateItemController = async (req, res) => {
     const hasUpdate = title !== undefined || content !== undefined;
 
     if (!hasUpdate) {
-      return res.status(400).json({
+      res.status(400).json({
         error: "Provide title or content to update.",
       });
+
+      return;
     }
 
     const updatedItem = await itemService.updateItemService({
@@ -126,23 +165,26 @@ const updateItemController = async (req, res) => {
       content,
     });
 
-    return res.status(200).json(updatedItem);
-  } catch (err) {
+    res.status(200).json(updatedItem);
+  } catch (err: unknown) {
     console.error("Error updating item:", err);
 
-    if (err.message === "Item not found") {
-      return res.status(404).json({ error: err.message });
+    if (err instanceof Error && err.message === "Item not found") {
+      res.status(404).json({ error: err.message });
+      return;
     }
 
     if (
-      err.message === "Pages cannot have content" ||
-      err.message === "Blocks cannot have a title" ||
-      err.message === "Block content must be an object"
+      err instanceof Error &&
+      (err.message === "Pages cannot have content" ||
+        err.message === "Blocks cannot have a title" ||
+        err.message === "Block content must be an object")
     ) {
-      return res.status(400).json({ error: err.message });
+      res.status(400).json({ error: err.message });
+      return;
     }
 
-    return res.status(500).json({ error: "Failed to update item" });
+    res.status(500).json({ error: "Failed to update item" });
   }
 };
 
@@ -150,13 +192,17 @@ const updateItemController = async (req, res) => {
 // Move an item
 // ------------------
 
-const moveItemController = async (req, res) => {
-  const workspaceId = req.workspaceId;
+const moveItemController = async (
+  req: Request<ItemIdParams>,
+  res: Response,
+): Promise<void> => {
+  const workspaceId = getWorkspaceId(req);
   const { itemId } = req.params;
   const { newParentId = null, newIndex } = req.body;
 
   if (newIndex !== undefined && (!Number.isInteger(newIndex) || newIndex < 0)) {
-    return res.status(400).json({ error: "Invalid newIndex" });
+    res.status(400).json({ error: "Invalid newIndex" });
+    return;
   }
 
   try {
@@ -167,8 +213,8 @@ const moveItemController = async (req, res) => {
       newIndex,
     });
 
-    return res.status(200).json(updatedItem);
-  } catch (err) {
+    res.status(200).json(updatedItem);
+  } catch (err: unknown) {
     console.error("Error moving item:", err);
 
     const errorMap = {
@@ -176,11 +222,22 @@ const moveItemController = async (req, res) => {
       "Cannot move item into itself": 400,
       "Cannot move item into its own descendant": 400,
       "Invalid nesting": 400,
-    };
+    } as const;
 
-    const status = errorMap[err.message] || 500;
+    if (!(err instanceof Error)) {
+      res.status(500).json({
+        error: "Failed to move item",
+      });
 
-    return res.status(status).json({
+      return;
+    }
+
+    const status =
+      err.message in errorMap
+        ? errorMap[err.message as keyof typeof errorMap]
+        : 500;
+
+    res.status(status).json({
       error: status === 500 ? "Failed to move item" : err.message,
     });
   }
@@ -190,10 +247,14 @@ const moveItemController = async (req, res) => {
 // Soft delete an item
 // ------------------
 
-const softDeleteItemController = async (req, res) => {
-  const workspaceId = req.workspaceId;
+const softDeleteItemController = async (
+  req: Request<ItemIdParams>,
+  res: Response,
+): Promise<void> => {
+  const workspaceId = getWorkspaceId(req);
+  const user = getUser(req);
+  const userId = user.id;
   const { itemId } = req.params;
-  const userId = req.user.id;
 
   try {
     const result = await itemService.softDeleteItemService({
@@ -202,19 +263,28 @@ const softDeleteItemController = async (req, res) => {
       userId,
     });
 
-    return res.status(200).json({
+    res.status(200).json({
       message: "Item and descendants successfully soft deleted",
       deletedIds: result.deletedIds,
       count: result.count,
     });
-  } catch (err) {
+  } catch (err: unknown) {
     console.error("Error soft deleting item:", err);
 
-    if (err.message === "Item not found") {
-      return res.status(404).json({ error: err.message });
+    if (!(err instanceof Error)) {
+      res.status(500).json({
+        error: "Failed to soft delete item",
+      });
+
+      return;
     }
 
-    return res.status(500).json({
+    if (err.message === "Item not found") {
+      res.status(404).json({ error: err.message });
+      return;
+    }
+
+    res.status(500).json({
       error: "Failed to soft delete item",
     });
   }
@@ -224,9 +294,13 @@ const softDeleteItemController = async (req, res) => {
 // Get trash items (pages only)
 // ------------------
 
-const getTrashItemsController = async (req, res) => {
-  const workspaceId = req.workspaceId;
-  const userId = req.user.id;
+const getTrashItemsController = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  const workspaceId = getWorkspaceId(req);
+  const user = getUser(req);
+  const userId = user.id;
 
   try {
     const items = await itemService.getTrashItemsService({
@@ -234,11 +308,11 @@ const getTrashItemsController = async (req, res) => {
       userId,
     });
 
-    return res.status(200).json(items);
-  } catch (err) {
+    res.status(200).json(items);
+  } catch (err: unknown) {
     console.error("Error fetching trash items:", err);
 
-    return res.status(500).json({
+    res.status(500).json({
       error: "Failed to fetch trash items",
     });
   }
@@ -248,8 +322,11 @@ const getTrashItemsController = async (req, res) => {
 // Restore a soft deleted item and all descendants (Within 30 day window)
 // ------------------
 
-const restoreItemController = async (req, res) => {
-  const workspaceId = req.workspaceId;
+const restoreItemController = async (
+  req: Request<ItemIdParams>,
+  res: Response,
+): Promise<void> => {
+  const workspaceId = getWorkspaceId(req);
   const { itemId } = req.params;
 
   try {
@@ -258,27 +335,38 @@ const restoreItemController = async (req, res) => {
       itemId,
     });
 
-    return res.status(200).json({
+    res.status(200).json({
       message: "Item and descendants restored",
       restoredIds: result.restoredIds,
       count: result.count,
     });
-  } catch (err) {
+  } catch (err: unknown) {
     console.error("Error restoring item:", err);
 
+    if (!(err instanceof Error)) {
+      res.status(500).json({
+        error: "Failed to restore item",
+      });
+
+      return;
+    }
+
     if (err.message === "Item not found") {
-      return res.status(404).json({ error: err.message });
+      res.status(404).json({ error: err.message });
+      return;
     }
 
     if (err.message === "Item is not deleted") {
-      return res.status(400).json({ error: err.message });
+      res.status(400).json({ error: err.message });
+      return;
     }
 
     if (err.message === "Restore window expired") {
-      return res.status(410).json({ error: err.message });
+      res.status(410).json({ error: err.message });
+      return;
     }
 
-    return res.status(500).json({
+    res.status(500).json({
       error: "Failed to restore item",
     });
   }
@@ -288,8 +376,11 @@ const restoreItemController = async (req, res) => {
 // Permanently delete an item and all descendants
 // ------------------
 
-const permanentlyDeleteItemController = async (req, res) => {
-  const workspaceId = req.workspaceId;
+const permanentlyDeleteItemController = async (
+  req: Request<ItemIdParams>,
+  res: Response,
+): Promise<void> => {
+  const workspaceId = getWorkspaceId(req);
   const { itemId } = req.params;
 
   try {
@@ -298,21 +389,31 @@ const permanentlyDeleteItemController = async (req, res) => {
       itemId,
     });
 
-    return res.status(200).json({
+    res.status(200).json({
       message: "Item permanently deleted",
       deletedIds: result.deletedIds,
       count: result.count,
     });
-  } catch (err) {
+  } catch (err: unknown) {
     console.error("Error permanently deleting item:", err);
 
-    if (err.message === "Deleted item not found") {
-      return res.status(404).json({
-        error: err.message,
+    if (!(err instanceof Error)) {
+      res.status(500).json({
+        error: "Failed to permanently delete item",
       });
+
+      return;
     }
 
-    return res.status(500).json({
+    if (err.message === "Deleted item not found") {
+      res.status(404).json({
+        error: err.message,
+      });
+
+      return;
+    }
+
+    res.status(500).json({
       error: "Failed to permanently delete item",
     });
   }
@@ -322,9 +423,13 @@ const permanentlyDeleteItemController = async (req, res) => {
 // Permanently delete all trash items
 // ------------------
 
-const emptyTrashController = async (req, res) => {
-  const workspaceId = req.workspaceId;
-  const userId = req.user.id;
+const emptyTrashController = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  const workspaceId = getWorkspaceId(req);
+  const user = getUser(req);
+  const userId = user.id;
 
   try {
     const result = await itemService.emptyTrashService({
@@ -332,21 +437,21 @@ const emptyTrashController = async (req, res) => {
       userId,
     });
 
-    return res.status(200).json({
+    res.status(200).json({
       message: "Trash emptied",
       deletedIds: result.deletedIds,
       count: result.count,
     });
-  } catch (err) {
+  } catch (err: unknown) {
     console.error("Error emptying trash:", err);
 
-    return res.status(500).json({
+    res.status(500).json({
       error: "Failed to empty trash",
     });
   }
 };
 
-module.exports = {
+export {
   createItemController,
   getItemsInWorkspaceController,
   getItemInParentController,
