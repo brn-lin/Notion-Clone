@@ -1,19 +1,18 @@
-const express = require("express");
-require("dotenv").config(); // Load .env variables
-const rateLimit = require("express-rate-limit");
-const cors = require("cors");
+import express, { type Request, type Response } from "express";
+import "dotenv/config"; // Load .env variables
+import cors from "cors";
 
-const pool = require("./db");
+import pool from "./db.js";
 
-const demoRoutes = require("./routes/demoRoutes");
-const authRoutes = require("./routes/authRoutes");
-const workspaceRoutes = require("./routes/workspaceRoutes");
-const itemRoutes = require("./routes/itemRoutes");
+import demoRoutes from "./routes/demoRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
+import workspaceRoutes from "./routes/workspaceRoutes.js";
+import itemRoutes from "./routes/itemRoutes.js";
 
-require("./jobs/cleanUpJobs");
+import "./jobs/cleanUpJobs.js";
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = Number(process.env.PORT) || 5000;
 
 // ------------------
 // Middleware
@@ -37,20 +36,22 @@ app.use(express.json());
 // Test route
 // ------------------
 
-app.get("/", (req, res) => {
+app.get("/", (_req: Request, res: Response) => {
   res.send("Notion Clone API is running!");
 });
 
-app.get("/health", (req, res) => {
+app.get("/health", (_req: Request, res: Response) => {
   res.status(200).json({ status: "ok" });
 });
 
-app.get("/ready", async (req, res) => {
+app.get("/ready", async (_req: Request, res: Response): Promise<void> => {
   try {
     await pool.query("SELECT 1");
+
     res.status(200).json({ status: "ready" });
   } catch (err) {
     console.error("Readiness check failed:", err);
+
     res.status(503).json({ status: "not ready" });
   }
 });
