@@ -2,7 +2,6 @@ import pool from "../db.js";
 import type { Request, Response, NextFunction } from "express";
 import { hasRole, type Role } from "../utils/permissions.js";
 import { getUser } from "../utils/getUser.js";
-import type { AuthTokenPayload } from "./authMiddleware.js";
 
 type WorkspaceMemberRow = {
   id: string;
