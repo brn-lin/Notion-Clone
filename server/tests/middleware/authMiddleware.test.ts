@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
 
+import jwt from "jsonwebtoken";
 import pool from "../../db.js";
 import { authMiddleware } from "../../middleware/authMiddleware.js";
 
