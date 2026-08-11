@@ -309,7 +309,7 @@ const CenterEditor = () => {
         [newBlock.id]: newBlock,
       }));
 
-      // Add new block to currentl ist of siblings
+      // Add new block to current list of siblings
       setChildrenByParentId((prev) => {
         const parent = currentItem.parent_id ?? ROOT;
         const siblings = [...(prev[parent] || [])];
