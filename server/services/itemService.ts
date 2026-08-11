@@ -742,6 +742,7 @@ const moveItemService = async ({
           indexClamped = refreshedSiblings.length;
         }
 
+        // R stands for row
         const beforeR = refreshedSiblings[indexClamped - 1];
         const afterR = refreshedSiblings[indexClamped];
 
