@@ -145,6 +145,74 @@ const getCurrentUser = async (req: Request, res: Response): Promise<void> => {
 };
 
 // ------------------
+// Update username
+// ------------------
+
+const updateUsername = async (req: Request, res: Response): Promise<void> => {
+  const { username } = req.body;
+
+  // Check if username is a string
+  if (typeof username !== "string") {
+    res.status(400).json({ error: "Invalid username" });
+    return;
+  }
+
+  // Remove whitespace from beginning and end, and make username all lowercase
+  const usernameNormalized = username.trim().toLowerCase();
+
+  // Check if username is present
+  if (!usernameNormalized) {
+    res.status(400).json({ error: "Username required" });
+    return;
+  }
+
+  // Check username length
+  if (usernameNormalized.length < 1 || usernameNormalized.length > 30) {
+    res.status(400).json({
+      error: "Username must be between 1 and 30 characters",
+    });
+    return;
+  }
+
+  // Check username characters
+  if (!/^[a-z0-9_]+$/.test(usernameNormalized)) {
+    res.status(400).json({
+      error:
+        "Username can only contain lowercase letters, numbers, and underscores",
+    });
+    return;
+  }
+
+  try {
+    const authUser = getUser(req);
+
+    const user = await authService.updateUsername(
+      authUser.id,
+      usernameNormalized,
+    );
+
+    // Successful response
+    res.json(user);
+  } catch (err: unknown) {
+    console.error("Update username error:", err);
+
+    if (err instanceof Error) {
+      if (err.message === "Username already in use") {
+        res.status(400).json({ error: err.message });
+        return;
+      }
+
+      if (err.message === "User not found") {
+        res.status(404).json({ error: err.message });
+        return;
+      }
+    }
+
+    res.status(500).json({ error: "Failed to update username" });
+  }
+};
+
+// ------------------
 // Soft delete current user
 // ------------------
 
@@ -179,5 +247,6 @@ export {
   login,
   reactivateAccount,
   getCurrentUser,
+  updateUsername,
   softDeleteCurrentUser,
 };

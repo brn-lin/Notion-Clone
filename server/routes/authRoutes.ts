@@ -53,6 +53,12 @@ router.post("/reactivate", authController.reactivateAccount);
 router.get("/me", authMiddleware, authController.getCurrentUser);
 
 // ------------------
+// Update username
+// ------------------
+
+router.patch("/me/username", authMiddleware, authController.updateUsername);
+
+// ------------------
 // Soft delete current user
 // ------------------
 

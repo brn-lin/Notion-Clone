@@ -8,6 +8,7 @@ import resetDemoWorkspace from "./demoService.js";
 type User = {
   id: string;
   email: string;
+  username: string | null;
 };
 
 type AuthResponse = {
@@ -30,6 +31,7 @@ type LoginRow = {
   id: string;
   email: string;
   password_hash: string;
+  username: string | null;
   is_demo: boolean;
 };
 
@@ -37,6 +39,7 @@ type ReactivationRow = {
   id: string;
   email: string;
   password_hash: string;
+  username: string | null;
   deleted_at: Date | null;
 };
 
@@ -63,7 +66,7 @@ const signup = async (
       `
       INSERT INTO users (email, password_hash)
       VALUES ($1, $2)
-      RETURNING id, email
+      RETURNING id, email, username
       `,
       [emailNormalized, passwordHash],
     );
@@ -84,6 +87,7 @@ const signup = async (
       user: {
         id: user.id,
         email: user.email,
+        username: user.username,
       },
     };
   } catch (err: unknown) {
@@ -92,7 +96,9 @@ const signup = async (
       typeof err === "object" &&
       err !== null &&
       "code" in err &&
-      err.code === "23505"
+      err.code === "23505" &&
+      "constraint" in err &&
+      err.constraint === "users_email_key"
     ) {
       throw new Error("Email already in use");
     }
@@ -114,7 +120,7 @@ const login = async (
   // Fetch user by email
   const result = await pool.query<LoginRow>(
     `
-      SELECT id, email, password_hash, is_demo
+      SELECT id, email, password_hash, is_demo, username
       FROM users
       WHERE email = $1
         AND deleted_at IS NULL
@@ -153,6 +159,7 @@ const login = async (
     user: {
       id: user.id,
       email: user.email,
+      username: user.username,
     },
   };
 };
@@ -173,7 +180,7 @@ const reactivateAccount = async (
 
     const result = await client.query<ReactivationRow>(
       `
-      SELECT id, email, password_hash, deleted_at
+      SELECT id, email, password_hash, deleted_at, username
       FROM users
       WHERE email = $1
       `,
@@ -248,6 +255,7 @@ const reactivateAccount = async (
       user: {
         id: user.id,
         email: user.email,
+        username: user.username,
       },
     };
   } catch (err: unknown) {
@@ -265,7 +273,7 @@ const reactivateAccount = async (
 const getCurrentUser = async (userId: string): Promise<User> => {
   const result = await pool.query<User>(
     `
-      SELECT id, email
+      SELECT id, email, username
       FROM users
       WHERE id = $1
         AND deleted_at IS NULL
@@ -280,6 +288,50 @@ const getCurrentUser = async (userId: string): Promise<User> => {
   }
 
   return user;
+};
+
+// ------------------
+// Update username
+// ------------------
+
+const updateUsername = async (
+  userId: string,
+  username: string,
+): Promise<User> => {
+  try {
+    const result = await pool.query<User>(
+      `
+      UPDATE users
+      SET username = $1
+      WHERE id = $2
+        AND deleted_at IS NULL
+      RETURNING id, email, username
+      `,
+      [username, userId],
+    );
+
+    const user = result.rows[0];
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    return user;
+  } catch (err: unknown) {
+    // Handle unique constraint violation
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "code" in err &&
+      err.code === "23505" &&
+      "constraint" in err &&
+      err.constraint === "users_username_key"
+    ) {
+      throw new Error("Username already in use");
+    }
+
+    throw err;
+  }
 };
 
 // ------------------
@@ -340,5 +392,6 @@ export {
   login,
   reactivateAccount,
   getCurrentUser,
+  updateUsername,
   softDeleteCurrentUser,
 };
