@@ -57,12 +57,13 @@ export const authMiddleware = async (
       return;
     }
 
-    // Check if user is deleted
+    // Check if user exists and is not soft-deleted
     const userResult = await pool.query<{ id: string }>(
       `
       SELECT id
       FROM users
       WHERE id = $1
+        AND deleted_at IS NULL
       `,
       [decoded.id],
     );
