@@ -1,5 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { AuthProvider } from "./context/AuthContext";
 import { WorkspaceProvider } from "./context/WorkspaceContext";
 import App from "./App";
 
@@ -11,8 +12,10 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <WorkspaceProvider>
-      <App />
-    </WorkspaceProvider>
+    <AuthProvider>
+      <WorkspaceProvider>
+        <App />
+      </WorkspaceProvider>
+    </AuthProvider>
   </StrictMode>,
 );
