@@ -167,15 +167,15 @@ const updateUsername = async (req: Request, res: Response): Promise<void> => {
   }
 
   // Check username length
-  if (usernameNormalized.length < 1 || usernameNormalized.length > 30) {
+  if (usernameNormalized.length < 2 || usernameNormalized.length > 30) {
     res.status(400).json({
-      error: "Username must be between 1 and 30 characters",
+      error: "Username must be between 2 and 30 characters",
     });
     return;
   }
 
   // Check username characters
-  if (!/^[a-z0-9_]+$/.test(usernameNormalized)) {
+  if (!/^[a-z0-9_.-]+$/.test(usernameNormalized)) {
     res.status(400).json({
       error:
         "Username can only contain lowercase letters, numbers, and underscores",
