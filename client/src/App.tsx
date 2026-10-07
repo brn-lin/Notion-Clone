@@ -5,6 +5,7 @@ import SignUp from "./web-pages/SignUp";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
 import AppLayout from "./app-components/app-layout/AppLayout";
+import UsernameOnboarding from "./app-components/onboarding/UsernameOnboarding";
 import CenterEditor from "./app-components/center-editor/CenterEditor";
 import TrashBin from "./app-components/trash/Trash";
 
@@ -17,6 +18,9 @@ function App() {
 
         {/* Sign Up page */}
         <Route path="/signup" element={<SignUp />} />
+
+        {/* Username onboarding page */}
+        <Route path="/onboarding/username" element={<UsernameOnboarding />} />
 
         {/* App (shared layout) */}
         <Route
