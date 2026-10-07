@@ -9,6 +9,7 @@ type AuthContextType = {
   user: User | null;
   setUser: Dispatch<SetStateAction<User | null>>;
   authLoading: boolean;
+  refreshUser: () => Promise<void>;
 };
 
 type AuthProviderProps = {
@@ -21,38 +22,40 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
 
+  // Load or refresh the current authenticated user
+  const refreshUser = async () => {
+    const token = sessionStorage.getItem("token");
+
+    // No token means there is no authenticated user
+    if (!token) {
+      setUser(null);
+      setAuthLoading(false);
+      return;
+    }
+
+    try {
+      // Get current user's account data from the backend
+      const res = await api.get<User>("/auth/me");
+
+      setUser(res.data);
+    } catch (err) {
+      console.error("Failed to fetch current user:", err);
+
+      // Remove invalid or expired token
+      sessionStorage.removeItem("token");
+      setUser(null);
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
   // Load current user when app starts
   useEffect(() => {
-    const fetchCurrentUser = async () => {
-      const token = sessionStorage.getItem("token");
-
-      // No token means there is no authenticated user
-      if (!token) {
-        setAuthLoading(false);
-        return;
-      }
-
-      try {
-        // Get current user's account data from the backend
-        const res = await api.get<User>("/auth/me");
-
-        setUser(res.data);
-      } catch (err) {
-        console.error("Failed to fetch current user:", err);
-
-        // Remove invalid or expired token
-        sessionStorage.removeItem("token");
-        setUser(null);
-      } finally {
-        setAuthLoading(false);
-      }
-    };
-
-    fetchCurrentUser();
+    refreshUser();
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, setUser, authLoading }}>
+    <AuthContext.Provider value={{ user, setUser, authLoading, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
