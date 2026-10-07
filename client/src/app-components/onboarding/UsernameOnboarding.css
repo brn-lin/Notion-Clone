@@ -1,0 +1,58 @@
+.username-onboarding {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 100vh;
+  padding: 32px;
+  box-sizing: border-box;
+}
+
+.username-onboarding__content {
+  width: 100%;
+  max-width: 540px;
+  height: 100%;
+  max-height: 270px;
+  background: white;
+}
+
+.username-onboarding__title {
+  font-size: 24px;
+  margin: 0 0 12px;
+}
+
+.username-onboarding__text {
+  color: rgb(102 102 102);
+  margin: 0 0 24px;
+}
+
+.username-onboarding__input {
+  width: 100%;
+  font-size: 14px;
+  border: 1px solid rgb(204 204 204);
+  border-radius: 6px;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.username-onboarding__error {
+  font-size: 14px;
+  color: red;
+  margin: 8px 0 0;
+}
+
+.username-onboarding__button {
+  width: 100%;
+  font-size: 14px;
+  color: white;
+  background: rgb(58 132 228);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 40px;
+  padding: 12px;
+}
+
+.username-onboarding__button:hover {
+  opacity: 0.9;
+}
