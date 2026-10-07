@@ -4,12 +4,15 @@ import api from "../api/axios";
 import type { FormEvent } from "react";
 import type { AxiosError } from "axios";
 import type { LoginResponse } from "../types/auth";
+import { useAuth } from "../context/AuthContext";
 import "./SignUp.css";
 
 function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+
+  const { refreshUser } = useAuth();
 
   const handleSignUp = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -24,7 +27,11 @@ function SignUp() {
       const token = res.data.token;
       sessionStorage.setItem("token", token);
 
-      navigate("/editor");
+      // Load the newly authenticated user into AuthContext
+      await refreshUser();
+
+      // New users must complete username setup
+      navigate("/onboarding/username");
     } catch (err) {
       console.error(err);
 
