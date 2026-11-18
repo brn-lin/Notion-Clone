@@ -1,18 +1,28 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useWorkspace } from "../../context/WorkspaceContext";
 import api from "../../api/axios";
 import type { User } from "../../types/auth";
+import type { Workspace } from "../../types/workspace";
 import "./UsernameOnboarding.css";
 
 const UsernameOnboarding = () => {
   const { user, setUser, authLoading } = useAuth();
+  const { setWorkspaceId, setWorkspaceName } = useWorkspace();
 
   const [username, setUsername] = useState("");
   const [usernameLoading, setUsernameLoading] = useState(false);
   const [error, setError] = useState("");
 
   const navigate = useNavigate();
+
+  // Populate the input if the user already has a saved username
+  useEffect(() => {
+    if (user?.username) {
+      setUsername(user.username);
+    }
+  }, [user]);
 
   // Don't show anything while authentication is being determined
   if (authLoading) {
@@ -21,11 +31,6 @@ const UsernameOnboarding = () => {
 
   // No authenticated user
   if (!user) {
-    return null;
-  }
-
-  // User already has a username
-  if (user.username !== null) {
     return null;
   }
 
@@ -42,21 +47,43 @@ const UsernameOnboarding = () => {
     setError("");
 
     try {
-      const res = await api.patch<User>("/auth/me/username", {
-        username: usernameNormalized,
-      });
+      // Step 1: Save the username if the user doesn't already have one
+      if (!user.username) {
+        const userRes = await api.patch<User>("/auth/me/username", {
+          username: usernameNormalized,
+        });
 
-      // Update AuthContext with the user returned by the backend
-      setUser(res.data);
+        // Update AuthContext with the user returned by the backend
+        setUser(userRes.data);
+      }
 
-      // Navigate to editor once username setup is complete
+      // Step 2: Check whether the user already has a workspace
+      const workspacesRes = await api.get<Workspace[]>("/workspaces");
+
+      let workspace = workspacesRes.data[0];
+
+      // Step 3: Create a workspace if the user doesn't have one
+      if (!workspace) {
+        const workspaceRes = await api.post<Workspace>("/workspaces", {
+          name: `${usernameNormalized}'s Space`,
+        });
+
+        workspace = workspaceRes.data;
+      }
+
+      // Step 4: Update WorkspaceContext
+      setWorkspaceId(workspace.id);
+      setWorkspaceName(workspace.name);
+
+      // Step 5: Navigate to the editor once workspace setup succeeds
       navigate("/editor");
     } catch (err: any) {
       console.error("Failed to update username:", err);
 
       setError(
         err.response?.data?.error ||
-          "Failed to create username. Please try again.",
+          err.response?.data?.message ||
+          "Failed to complete account setup. Please try again.",
       );
     } finally {
       setUsernameLoading(false);
