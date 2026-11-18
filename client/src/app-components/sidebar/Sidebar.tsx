@@ -100,7 +100,7 @@ const Sidebar = () => {
 
       await api.post(`/workspaces/${workspaceId}/items`, {
         type: "page",
-        title: "New page",
+        title: "New Page",
         parentId: null,
       });
 
