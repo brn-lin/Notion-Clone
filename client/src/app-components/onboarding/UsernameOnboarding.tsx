@@ -71,6 +71,13 @@ const UsernameOnboarding = () => {
         workspace = workspaceRes.data;
       }
 
+      // Create the default page for the default workspace
+      await api.post(`/workspaces/${workspace.id}/items`, {
+        type: "page",
+        title: "New Page",
+        parentId: null,
+      });
+
       // Step 4: Update WorkspaceContext
       setWorkspaceId(workspace.id);
       setWorkspaceName(workspace.name);
