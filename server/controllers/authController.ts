@@ -157,8 +157,8 @@ const updateUsername = async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  // Remove whitespace from beginning and end, and make username all lowercase
-  const usernameNormalized = username.trim().toLowerCase();
+  // Remove whitespace from beginning and end
+  const usernameNormalized = username.trim();
 
   // Check if username is present
   if (!usernameNormalized) {
@@ -175,10 +175,10 @@ const updateUsername = async (req: Request, res: Response): Promise<void> => {
   }
 
   // Check username characters
-  if (!/^[a-z0-9_.-]+$/.test(usernameNormalized)) {
+  if (!/^[A-Za-z0-9_.-]+$/.test(usernameNormalized)) {
     res.status(400).json({
       error:
-        "Username can only contain lowercase letters, numbers, and underscores",
+        "Username can only contain uppercase letters, lowercase letters, numbers, and underscores",
     });
     return;
   }

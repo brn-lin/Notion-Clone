@@ -35,7 +35,7 @@ const UsernameOnboarding = () => {
   }
 
   const handleSubmit = async () => {
-    const usernameNormalized = username.trim().toLowerCase();
+    const usernameNormalized = username.trim();
 
     // Don't allow an empty username
     if (!usernameNormalized) {
