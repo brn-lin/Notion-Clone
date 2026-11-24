@@ -16,6 +16,7 @@ export default {
           "justify-content",
           "align-items",
           "width",
+          "min-width",
           "max-width",
           "height",
           "max-height",

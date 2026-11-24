@@ -1,13 +1,13 @@
 .sidebar {
   display: flex;
   flex-direction: column;
+  min-width: 245px;
+  max-width: 480px;
   height: 100vh;
   position: relative;
   background-color: rgb(245 245 245);
   padding-left: 10px;
   flex-shrink: 0;
-  min-width: 245px;
-  max-width: 480px;
 }
 
 .sidebar-header {
