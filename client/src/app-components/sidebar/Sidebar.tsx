@@ -4,13 +4,16 @@ import { useWorkspace } from "../../context/WorkspaceContext";
 import api from "../../api/axios";
 import { MdOutlineDriveFileRenameOutline } from "react-icons/md";
 import { RiDeleteBinLine } from "react-icons/ri";
+import { BiUserCircle } from "react-icons/bi";
+import { IoIosArrowDown } from "react-icons/io";
 import type { Workspace } from "../../types/workspace";
 import "./Sidebar.css";
 
 const Sidebar = () => {
   const navigate = useNavigate();
 
-  const { workspaceId, setWorkspaceId, setWorkspaceName } = useWorkspace();
+  const { workspaceId, setWorkspaceId, workspaceName, setWorkspaceName } =
+    useWorkspace();
 
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
 
@@ -267,6 +270,12 @@ const Sidebar = () => {
           onClick={handleLogout}
         >
           Log out
+        </button>
+
+        <button className="sidebar-footer__workspace-button">
+          <BiUserCircle className="sidebar-footer__avatar-icon" />
+          <span>{workspaceName}</span>
+          <IoIosArrowDown />
         </button>
       </div>
 
